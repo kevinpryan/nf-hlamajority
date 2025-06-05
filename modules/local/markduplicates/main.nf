@@ -1,4 +1,5 @@
 process markduplicates{
+    label "bwa_mem_container"
     publishDir "$params.outdir/markduplicates"
 
     input:
