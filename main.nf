@@ -3,6 +3,35 @@
 include { HLATYPING } from "./workflows/hlatyping"
 
 workflow {
+    if (params.bam = true) {
+    // parse BAM samplesheet
+    Channel.fromPath(params.samplesheet, checkIfExists: true)
+    | splitCsv( header:true )
+    | map { row ->
+        meta = row.subMap('sample')
+        [meta, [
+            file(row.bam, checkIfExists: true),
+    }
+    | set { ch_bam }
+    // subset BAM to regions of interest
+    samtools_sort(ch_bam)
+    samtools_index(samtools_sort.out.sortedbam)
+    subsetBam2(samtools_index.out.bam_indexed)
+    bam2fastq(subsetBam2.out.subsetbam)
+    // run hla typing pipeline
+    HLATYPING(
+        bam2fastq.out.convertedfastqs,
+        params.reference_dir,
+        params.hla_la_graph,
+        params.kourami_ref,
+        params.kourami_database,
+        params.trimmer,
+        params.adapter_fasta,
+        params.save_trimmed_fail,
+        params.save_merged
+    )
+
+    } else {
     Channel.fromPath(params.samplesheet, checkIfExists: true)
     | splitCsv( header:true )
     | map { row ->
@@ -28,17 +57,5 @@ workflow {
         //params.adapter_fasta,
         //params.subset_regions
     )
-}
-
-// if you want to add back in seq_type option to add rna-seq:
-/*
-Channel.fromPath(params.samplesheet, checkIfExists: true)
-    | splitCsv( header:true )
-    | map { row ->
-        meta = row.subMap('sample', 'seq_type')
-        [meta, [
-            file(row.fastq_1, checkIfExists: true),
-            file(row.fastq_2, checkIfExists: true)]]
     }
-    | set { ch_fastq }
-*/
+}
