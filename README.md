@@ -4,7 +4,7 @@
 
 ## Background
 
-This pipeline is an implementation of the majority voting approach for the predition of MHC Class I genotypes from DNA sequencing data. This approach was proposed by Claeys et al 2023 based on a benchmarking study. `nf-hlamajority` takes paired-end DNA-sequencing data and runs four tools:
+This pipeline is an implementation of a majority voting approach for the predition of MHC Class I genotypes from DNA sequencing data. This approach was proposed by Claeys et al 2023 based on their benchmarking study. `nf-hlamajority` takes paired-end DNA-sequencing data and runs four tools:
 
 - Optitype
 - Polysolver
@@ -23,7 +23,7 @@ git clone https://github.com/kevinpryan/nf-hlamajority.git
 
 Prepare a samplesheet with your input data that looks as follows:
 
-**samplesheet.csv**:
+**samplesheet.csv**
 
 ```csv
 sample,fastq_1,fastq_2
