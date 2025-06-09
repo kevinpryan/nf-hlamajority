@@ -13,6 +13,8 @@ This pipeline is an implementation of a majority voting approach for the prediti
 
 The MHC genotypes predicted by the highest number of tools is chosen.
 
+This pipeline contains a step where the aligned BAM is subset to chromosome 6, chromosome 6 alt contigs and HLA contigs. Claeys et al did not subset BAMs in this way in their benchmark. In addition, only a version of this Nextflow pipeline that does not subset the BAMs has been tested on a portion of the data used in the Claeys et al benchmark. Future work will include repeating these tests for the version of the pipeline that subsets the aligned BAMs.
+
 ## Usage
 
 Clone the repository
@@ -33,6 +35,18 @@ SAMPLE3,SAMPLE3_S1_L004_R1_001.fastq.gz,SAMPLE3_S1_L004_R2_001.fastq.gz
 ```
 
 Each row represents a pair of fastq files. Currently the pipeline only supports paired-end fastqs.
+
+The script `install_references.sh` must be run before running the pipeline for the first time. The script should be run from **within** the `bin` directory.
+
+The script takes an argument which is a directory (which must exist) where you can download the singularity images to be used to build/download the references.
+
+```bash
+cd bin
+bash install_references.sh /path/to/singularity/cache/dir/
+```
+
+This will take several hours to run, and can require up to ~40Gb memory.
+
 
 When you have installed and built the required references, run the pipeline with:
 
