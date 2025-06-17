@@ -1,3 +1,9 @@
+#!/bin/bash
+
+# to run: go to bin directory
+# bash install_references.sh /path/to/dir/with/singularity/images
+# last command (HLA-LA prepareGraph) can take a few hours and take up to 40G of memory
+
 SINGULARITY_CACHE=$1
 bindir=$(pwd)
 cd $SINGULARITY_CACHE
