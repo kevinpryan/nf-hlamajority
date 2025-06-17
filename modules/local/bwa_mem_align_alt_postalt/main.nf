@@ -23,7 +23,7 @@ process bwa_mem_align_alt_postalt{
 */
 process bwa_mem_align_alt_postalt{
     publishDir "$params.outdir/bwa-aln-postalt"
-    label: "bwa_mem_container"
+    label "bwa_mem_container"
     input:
     path reference
     tuple val(meta), path(reads)
