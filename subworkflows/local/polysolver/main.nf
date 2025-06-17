@@ -16,7 +16,6 @@ workflow polysolver{
     take: 
     subsetbam
     reference
-    reference_basename
 
     main:
     bam2fastq(
@@ -24,8 +23,7 @@ workflow polysolver{
     )
     realignwithoutAlt(
         bam2fastq.out.convertedfastqs,
-        reference,
-        reference_basename
+        reference
         ) 
     samtools_sort_index(
         realignwithoutAlt.out.realignbam

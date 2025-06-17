@@ -5,10 +5,8 @@ process RUN_OPTITYPE{
         'quay.io/biocontainers/optitype:1.3.5--0' }"
     input:
     tuple val(meta), path(reads)
-    //val dna_rna
     output:
     tuple val(meta), path("optitype_calls"), emit: optitype_call // will be a directory called optitype_calls containing the tsv and pdf
-    //tuple val(meta), path("*.pdf")
     script:
     """
     gunzip *.gz

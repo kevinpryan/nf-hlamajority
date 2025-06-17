@@ -72,7 +72,7 @@ process subsetBam2{
 */
 
 process subsetBam2{
-    tag "${meta.id}"
+    tag "${meta.sample}"
     publishDir "$params.outdir/subsetBam2", mode: 'copy'
     label 'samtools_container'
 
@@ -90,9 +90,6 @@ process subsetBam2{
     script:
     def bamfile = bam_bai[0] // Get the BAM file from the input tuple
     prefix = "${meta.sample}_subset.sorted" // Use meta.sample for unique prefix
-    // If meta doesn't have .sample, use meta.id or just a fixed name if only one sample
-    // e.g., prefix = meta.id ? "${meta.id}_subset.sorted" : "output_subset.sorted"
-
 
     """
     echo "Input BAM: ${bamfile}"

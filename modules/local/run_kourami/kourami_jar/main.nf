@@ -1,4 +1,3 @@
-
 process RUN_KOURAMI_JAR{
     publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
     input:

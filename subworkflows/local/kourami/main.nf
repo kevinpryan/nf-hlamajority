@@ -8,13 +8,13 @@ include { RUN_KOURAMI_JAR } from '../../../modules/local/run_kourami/kourami_jar
 workflow kourami{
     
     take: 
-    subsetbam
+    bam
     kourami_panel
     kourami_reference
 
     main:
     RUN_KOURAMI_ALIGN_EXTRACT(
-        subsetbam,
+        bam,
         kourami_panel,
         kourami_reference
     )

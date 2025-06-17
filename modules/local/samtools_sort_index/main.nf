@@ -1,4 +1,5 @@
 process samtools_sort_index{
+    label 'samtools_container'
     publishDir "$params.outdir/sort_index"
 
     input:

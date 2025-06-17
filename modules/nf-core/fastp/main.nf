@@ -1,5 +1,5 @@
 process FASTP {
-    tag "$meta.id"
+    tag "$meta.sample"
 
     container 'https://depot.galaxyproject.org/singularity/fastp:0.23.4--h5f740d0_0'
 
@@ -52,7 +52,7 @@ process FASTP {
         """
 
     stub:
-    def prefix              = task.ext.prefix ?: "${meta.id}"
+    def prefix              = task.ext.prefix ?: "${meta.sample}"
     def is_single_output    = task.ext.args?.contains('--interleaved_in')
     def touch_reads         = is_single_output ? "${prefix}.fastp.fastq.gz" : "${prefix}_1.fastp.fastq.gz ${prefix}_2.fastp.fastq.gz"
     def touch_merged        = (!is_single_output && save_merged) ? "touch ${prefix}.merged.fastq.gz" : ""
