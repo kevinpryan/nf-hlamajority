@@ -3,5 +3,6 @@ This directory contains instructions for building the following conatainers:
 - genome-seek_hla-v1.0.4.img
 
 Docker was used to build the containers.
-
-
+Requirements:
+- git
+- Docker
