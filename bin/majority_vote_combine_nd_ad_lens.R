@@ -156,7 +156,7 @@ alleles_support_table$hla_allele_support <- gsub(";?NA;?", "", alleles_support_t
 # create output file for majority voting
 majority_votes_all <- sort(unique(c(unlist(majority_voting_nd_in_hla[,2:7]), unlist(majority_voting_ad_in_hla[,2:7]))))
 majority_votes_df <- t(data.frame(majority_votes_all))
-majority_votes_df_outfile <- paste(dataset, pat_name, run, "supported_hla_alleles.csv", sep = "_")
+majority_votes_df_outfile <- paste(dataset, pat_name, run, "supported_hla_alleles.csv", sep = "-")
 write.table(majority_votes_df, file = majority_votes_df_outfile, row.names = F, col.names = F, quote = F, sep = ",")                           
-alleles_support_table_outfile <- paste(dataset, pat_name, run, "hla_alleles_support.csv", sep = "_")
+alleles_support_table_outfile <- paste(dataset, pat_name, run, "hla_alleles_support.csv", sep = "-")
 write.table(alleles_support_table, file = alleles_support_table_outfile, sep = "\t", quote = F, row.names = F)
