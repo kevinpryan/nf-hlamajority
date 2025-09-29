@@ -17,22 +17,23 @@ library(stringr)
 library(tibble)
 library(tidyr)
 library(vroom)
+library(tidytable)
 
 # take in command line arguments
 option_list = list(
-  make_option(c("-d", "--dataset"), type="character", default=NULL, 
+  make_option(c("--dataset"), type="character", default=NULL, 
               help="name of dataset", metavar="character"),
-  make_option(c("-p", "--pat_name"), type="character", default=NULL, 
+  make_option(c("--pat_name"), type="character", default=NULL, 
               help="patient ID", metavar="character"),
-  make_option(c("-r", "--run"), type="character", default=NULL,
+  make_option(c("--run"), type="character", default=NULL,
               help="LENS run", metavar="character"),
-  make_option(c("-cnd", "--all_calls_nd"), type="character", default=NULL,
+  make_option(c("--all_calls_nd"), type="character", default=NULL,
               help="path to all calls normal DNA", metavar="character"),
-  make_option(c("-cad", "--all_calls_ad"), type="character", default=NULL,
+  make_option(c("--all_calls_ad"), type="character", default=NULL,
               help="path to all calls tumour DNA", metavar="character"),
-  make_option(c("-mnd", "--majority_voting_nd"), type="character", default=NULL,
+  make_option(c("--majority_voting_nd"), type="character", default=NULL,
               help="path to majority vote normal DNA output", metavar="character"),
-  make_option(c("-mad", "--majority_voting_ad"), type="character", default=NULL,
+  make_option(c("--majority_voting_ad"), type="character", default=NULL,
               help="path to majority vote tumour DNA output", metavar="character")
 ); 
 
