@@ -97,7 +97,7 @@ process subsetBam2{
     echo "CPUs for task: ${task.cpus}"
 
     echo 'Subsetting regions...'
-    chr6_contigs=\$(samtools idxstats "${bamfile}" | awk '/^chr6|^HLA-/{print \$1}' | tr \$'\\n' ' ')
+    chr6_contigs=\$(samtools idxstats "${bamfile}" | awk '/^chr6|^HLA-/' | cut -f 1 | tr \$'\\n' ' ')
 
     echo "Contigs to subset: '\${chr6_contigs}'"
 
