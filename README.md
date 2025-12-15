@@ -1,6 +1,6 @@
 # nf-hlamajority
 
-![nf-hlamajority metro map](docs/images/nf-hlamajority-without-subset.svg)
+![nf-hlamajority metro map](docs/images/nf-hlamajority-with-subset-markdup.drawio.svg)
 
 ## Background
 
