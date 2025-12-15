@@ -1,4 +1,5 @@
 process bam2fastq{
+    tag "$meta.sample"
     label 'samtools_container'
     publishDir "$params.outdir/bam2fastq"
 

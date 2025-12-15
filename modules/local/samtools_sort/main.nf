@@ -1,4 +1,6 @@
 process samtools_sort{
+    tag "$meta.sample"
+
     label "samtools_container"
 
     publishDir "$params.outdir/sort"

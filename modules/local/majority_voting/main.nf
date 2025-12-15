@@ -1,4 +1,6 @@
 process MAJORITY_VOTE{
+    tag "$meta.sample"
+
     publishDir "$params.outdir/results"
 
     input:

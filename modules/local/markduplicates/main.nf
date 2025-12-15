@@ -1,4 +1,6 @@
 process markduplicates{
+    tag "$meta.sample"
+
     label "biobambam2_container"
     publishDir "$params.outdir/markduplicates"
 
@@ -13,6 +15,3 @@ process markduplicates{
     bammarkduplicates I=${sortedbam} O=${meta.sample}_sorted_mdup.bam index=1 rmdup=0
     """
 }
-
-// old version     tuple val(meta), path("*_sorted_mdup.bam"), path("*_sorted_mdup.bam.bai"), emit: markdupbam
-

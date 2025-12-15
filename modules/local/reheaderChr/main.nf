@@ -1,4 +1,6 @@
 process reheaderChr{
+    tag "$meta.sample"
+
     publishDir "$params.outdir/reheaderChr", mode: 'copy'
 
     input:

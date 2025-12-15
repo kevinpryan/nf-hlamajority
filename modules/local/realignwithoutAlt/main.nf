@@ -1,4 +1,6 @@
 process realignwithoutAlt{
+    tag "$meta.sample"
+
     label 'bwa_mem_container'
     publishDir "$params.outdir/realignwithoutAlt"
     

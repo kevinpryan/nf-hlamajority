@@ -1,4 +1,5 @@
 process bwa_index{
+    tag "$meta.sample"
     publishDir "$params.outdir/bwa-aln"
     input:
     path reference

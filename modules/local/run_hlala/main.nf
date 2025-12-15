@@ -1,4 +1,6 @@
 process RUN_HLALA{
+    tag "$meta.sample"
+
     publishDir "${params.outdir}/hlala_calls/${meta.sample}", mode: 'copy'
     input:
     tuple val(meta), path(reads)
@@ -12,5 +14,3 @@ process RUN_HLALA{
     cp "${meta.sample}/hla/R1_bestguess_G.txt" hlala_calls
     """
 }
-//     HLA-LA.pl --BAM *.bam --graph /usr/local/bin/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT --workingDir . --sampleID ${meta.sample} --maxThreads ${task.cpus}
-

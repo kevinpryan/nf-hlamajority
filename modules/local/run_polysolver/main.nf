@@ -1,4 +1,6 @@
 process RUN_POLYSOLVER{
+    tag "$meta.sample"
+
     publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
     input:
     tuple val(meta), path(reads)

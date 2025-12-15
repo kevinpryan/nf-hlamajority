@@ -1,4 +1,6 @@
 process RUN_OPTITYPE{
+    tag "$meta.sample"
+
     publishDir "${params.outdir}/optitype_calls/${meta.sample}", mode: 'copy'
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
         'https://depot.galaxyproject.org/singularity/optitype:1.3.5--0' :
@@ -17,6 +19,3 @@ process RUN_OPTITYPE{
     rm *.fq
     """
 }
-
-    //OptiTypePipeline.py --input *.1.fq *.2.fq --verbose --${meta.seq_type} --outdir ${meta.sample}
-

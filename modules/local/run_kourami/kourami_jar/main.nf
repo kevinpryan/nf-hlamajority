@@ -1,4 +1,6 @@
 process RUN_KOURAMI_JAR{
+    tag "$meta.sample"
+
     publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
     input:
     tuple val(meta), path(bam_bai)
@@ -12,5 +14,3 @@ process RUN_KOURAMI_JAR{
     cp *.result kourami_calls
     """
 }
-//     HLA-LA.pl --BAM *.bam --graph /usr/local/bin/HLA-LA/graphs/PRG_MHC_GRCh38_withIMGT --workingDir . --sampleID ${meta.sample} --maxThreads ${task.cpus}
-
