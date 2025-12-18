@@ -1,37 +1,157 @@
 #!/bin/bash
 
-# to run: go to bin directory
-# bash install_references.sh /path/to/dir/with/singularity/images
-# HLA-LA prepareGraph can take a few hours and take up to 40G of memory
+# Usage: 
+#   bash install_references.sh -e docker -o /path/to/refs
+#   bash install_references.sh -e singularity -c /path/to/singularity_cache -o /path/to/refs
+#
+# Arguments:
+#   -e, --engine   [Required] Container engine: 'docker' or 'singularity'
+#   -c, --cache    [Required if engine is singularity] Directory for singularity images
+#   -o, --output   [Optional] Directory to build references (default: ../references)
+
 set -e
 
-if [ -z "$1" ]; then
-    echo "Error: Please provide the path to the singularity cache directory as the first argument."
-    echo "Usage: $0 <singularity_cache_dir> [reference_output_dir]"
-    echo "Example: $0 /path/to/singularity_images /data/large_storage/references"
+# Initialize variables
+ENGINE_MODE=""
+CACHE_DIR=""
+OUTPUT_DIR=""
+
+# ------------------------------------------------------------------
+# 1. PARSE NAMED ARGUMENTS
+# ------------------------------------------------------------------
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -e|--engine)
+      ENGINE_MODE="$2"
+      shift 2
+      ;;
+    -c|--cache)
+      CACHE_DIR="$2"
+      shift 2
+      ;;
+    -o|--output)
+      OUTPUT_DIR="$2"
+      shift 2
+      ;;
+    -h|--help)
+      echo "Usage: $0 -e <docker|singularity> [-c <cache_dir>] [-o <output_dir>]"
+      echo ""
+      echo "Options:"
+      echo "  -e, --engine    Container engine (docker or singularity)"
+      echo "  -c, --cache     Path to singularity image cache (Required for singularity)"
+      echo "  -o, --output    Path to reference output directory (Default: project/references)"
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown argument '$1'"
+      echo "Use -h for help."
+      exit 1
+      ;;
+  esac
+done
+
+# ------------------------------------------------------------------
+# 2. VALIDATE ARGUMENTS
+# ------------------------------------------------------------------
+
+# Validate Engine
+if [[ -z "$ENGINE_MODE" ]]; then
+    echo "Error: You must specify a container engine using -e or --engine."
+    echo "       Available options: 'docker', 'singularity'"
     exit 1
 fi
 
-SINGULARITY_CACHE=$1
+if [[ "$ENGINE_MODE" != "docker" && "$ENGINE_MODE" != "singularity" ]]; then
+    echo "Error: Invalid engine '$ENGINE_MODE'. Must be 'docker' or 'singularity'."
+    exit 1
+fi
 
+# Validate Cache (Required for Singularity)
+if [[ "$ENGINE_MODE" == "singularity" ]]; then
+    if [[ -z "$CACHE_DIR" ]]; then
+        echo "Error: When using Singularity, you must specify a cache directory using -c or --cache."
+        exit 1
+    fi
+    # Create and resolve cache path
+    mkdir -p "$CACHE_DIR"
+    SINGULARITY_CACHE=$(realpath "$CACHE_DIR")
+fi
+
+# Validate Output Directory
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-PROJECT_ROOT=$(realpath "${SCRIPT_DIR}/..") # Assumes script is in project/bin
+PROJECT_ROOT=$(realpath "${SCRIPT_DIR}/..") 
 ASSETS_DIR="${PROJECT_ROOT}/assets"
 
-if [ -n "$2" ]; then
-    # User provided a custom path
-    # Create it immediately to ensure realpath works and permissions are okay
-    mkdir -p "$2"
-    REF_DIR=$(realpath "$2")
-    echo "INFO: Custom reference directory specified: $REF_DIR"
+if [[ -n "$OUTPUT_DIR" ]]; then
+    mkdir -p "$OUTPUT_DIR"
+    REF_DIR=$(realpath "$OUTPUT_DIR")
+    echo "INFO: Output directory set to: $REF_DIR"
 else
-    # Default to project/references
     REF_DIR="${PROJECT_ROOT}/references"
-    echo "INFO: Using default reference directory: $REF_DIR"
+    echo "INFO: Using default output directory: $REF_DIR"
+fi
+
+echo "INFO: Engine selected: $ENGINE_MODE"
+
+# ------------------------------------------------------------------
+# 3. DEFINE IMAGES
+# ------------------------------------------------------------------
+# Image IDs: 0=Kourami, 1=BWAKit, 2=HLA-LA
+IMAGE_FILES=(
+    "kevinr9525-cancerit-kourami-wget.img"
+    "quay.io-biocontainers-bwakit-0.7.18.dev1--hdfd78af_0.img"
+    "kevinr9525-genome-seek_hla-v1.0.4.img"
+)
+
+IMAGE_URIS=(
+    "docker://kevinr9525/cancerit-kourami:wget"
+    "docker://quay.io/biocontainers/bwakit:0.7.18.dev1--hdfd78af_0"
+    "docker://kevinr9525/genome-seek_hla:v1.0.4"
+)
+
+# ------------------------------------------------------------------
+# 4. PREPARE IMAGES
+# ------------------------------------------------------------------
+if [ "$ENGINE_MODE" == "singularity" ]; then
+    echo "INFO: Verifying Singularity images in cache..."
+    for i in "${!IMAGE_FILES[@]}"; do
+        FILE="${IMAGE_FILES[$i]}"
+        URI="${IMAGE_URIS[$i]}"
+        if [ ! -f "$SINGULARITY_CACHE/$FILE" ]; then
+            echo "Pulling '$FILE' from '$URI'..."
+            singularity pull --name "$SINGULARITY_CACHE/$FILE" "$URI"
+        fi
+    done
+elif [ "$ENGINE_MODE" == "docker" ]; then
+    echo "INFO: Ensuring Docker images are pulled..."
+    for i in "${!IMAGE_URIS[@]}"; do
+        DOCKER_TAG=${IMAGE_URIS[$i]#docker://} 
+        # Check if image exists locally
+        if [[ "$(docker images -q $DOCKER_TAG 2> /dev/null)" == "" ]]; then
+            echo "Pulling $DOCKER_TAG..."
+            docker pull "$DOCKER_TAG"
+        fi
+    done
 fi
 
 # ------------------------------------------------------------------
-# HELPER FUNCTION: Verify MD5, Run if missing/bad, Verify again
+# HELPER: GET CMD
+# ------------------------------------------------------------------
+get_container_cmd() {
+    local idx=$1
+    if [ "$ENGINE_MODE" == "singularity" ]; then
+        echo "singularity run -B $(pwd) ${SINGULARITY_CACHE}/${IMAGE_FILES[$idx]}"
+    else
+        local DOCKER_TAG=${IMAGE_URIS[$idx]#docker://}
+        # -v $(pwd):$(pwd) maps current dir
+        # -w $(pwd) sets work dir
+        # -u $(id -u):$(id -g) ensures files are owned by user, not root
+        echo "docker run --rm -v $(pwd):$(pwd) -w $(pwd) -u $(id -u):$(id -g) ${DOCKER_TAG}"
+    fi
+}
+
+# ------------------------------------------------------------------
+# HELPER: VERIFY OR RUN
 # ------------------------------------------------------------------
 verify_or_run() {
     local checksum_file="$1"
@@ -41,184 +161,147 @@ verify_or_run() {
     echo "============================================================"
     echo "STEP: $step_name"
     
-    # Check 1: Do files exist and match checksum?
-    # We suppress output here to avoid clutter if it passes
     if [ -f "$checksum_file" ] && md5sum --status -c "$checksum_file"; then
-        echo "INFO: Checksum verified. Skipping installation for $step_name."
+        echo "INFO: Checksum verified. Skipping."
         return 0
     fi
 
-    echo "INFO: Checksum missing or mismatch. Running installation..."
-    
-    # Run the command
+    echo "INFO: Checksum mismatch/missing. Running generation..."
     eval "$run_command"
 
-    # Check 2: Verify after installation
     if [ -f "$checksum_file" ] && md5sum --status -c "$checksum_file"; then
-        echo "SUCCESS: $step_name installed and verified successfully."
+        echo "SUCCESS: Verified."
     else
-        echo "ERROR: $step_name failed verification after installation."
-        echo "       Checked against: $checksum_file"
+        echo "ERROR: Checksum verification failed for $step_name."
         exit 1
     fi
     echo "============================================================"
 }
-# ------------------------------------------------------------------
 
+#--------------------------------------------------------------------
+# HELPER: TEST HLA-LA INSTALLATION
+#--------------------------------------------------------------------
 
-mkdir -p ${SINGULARITY_CACHE}; cd $SINGULARITY_CACHE
-
-# Pull singularity images if they are not already present
-IMAGE_FILES=(
-    "kevinr9525-cancerit-kourami-wget.img"
-    "quay.io-biocontainers-bwakit-0.7.18.dev1--hdfd78af_0.img"
-    "kevinr9525-genome-seek_hla-v1.0.4.img"
-)
-
-# Define the corresponding remote Docker URIs
-IMAGE_URIS=(
-    "docker://kevinr9525/cancerit-kourami:wget"
-    "docker://quay.io/biocontainers/bwakit:0.7.18.dev1--hdfd78af_0"
-    "docker://kevinr9525/genome-seek_hla:v1.0.4"
-)
-
-# Loop over the images by their index
-for i in "${!IMAGE_FILES[@]}"; do
-    FILE="${IMAGE_FILES[$i]}"
-    URI="${IMAGE_URIS[$i]}"
-    if [ ! -f "$FILE" ]; then
-        echo "Image not found. Pulling '$FILE' from '$URI'..."
-        singularity pull --name "$FILE" "$URI"
-    else
-        echo "Image '$FILE' already exists. Using existing image."
+test_hlala() {
+    local checksum_file="$1"
+    local run_command="$2"
+    local step_name="$3"
+    
+    echo "============================================================"
+    echo "STEP: $step_name"
+    wget -O NA12878.mini.cram https://www.dropbox.com/scl/fi/7kbq1mrk8k468dscsg3b8/NA12878.mini.cram?rlkey=ng89b7mf913yrk7ppvxcyk20j&e=1&dl=0 
+    eval "$run_command"
+    # check output of HLA-LA test
+    if [ -f "$checksum_file" ] && md5sum --status -c "$checksum_file"; then
+       echo "HLA-LA installation successul"
+    else 
+        echo "ERROR: Checksum verification failed for $step_name - problem with HLA-LA installation or testfile"
+        exit 1
     fi
-done
+    
+}
 
 # ------------------------------------------------------------------
-# 1. BUILD/DOWNLOAD KOURAMI REFERENCES
+# MAIN INSTALLATION LOGIC
 # ------------------------------------------------------------------
 mkdir -p ${REF_DIR}; cd ${REF_DIR}
 
-# Ensure repo is present
+# --- KOURAMI ---
 if [ ! -d "kourami" ] ; then
     git clone https://github.com/Kingsford-Group/kourami.git
 else
-    # Verify git repo is valid, otherwise re-clone could be better, but pull is standard
     cd kourami; git pull https://github.com/Kingsford-Group/kourami.git; cd ..
 fi
 
-# A. Download GRCh38
-# We verify inside 'resources' because md5sum checks relative paths
-cd kourami/resources
+# Kourami: GRCh38
+
+cd "${REF_DIR}/kourami/resources"
+
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/kourami/resources/hs38NoAltDH.fa.md5" \
     "cd ../scripts && bash download_grch38.sh hs38NoAltDH && cd ../resources" \
     "Kourami: Download hs38NoAltDH"
 
-# B. Index GRCh38
+CMD=$(get_container_cmd 0)
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/kourami/resources/bwa_0.7.17-r1188_index_hs38NoAltDH.md5" \
-    "singularity run -B $(pwd) ${SINGULARITY_CACHE}/kevinr9525-cancerit-kourami-wget.img bwa index hs38NoAltDH.fa" \
+    "$CMD bwa index hs38NoAltDH.fa" \
     "Kourami: Index hs38NoAltDH"
+cd ../ 
 
-cd ../ # back to kourami root
+# Kourami: Panel
 
-# C. Download Panel
-# We verify inside 'db'
-cd db
-verify_or_run \
-    "${ASSETS_DIR}/references_checksums/kourami/db/All_FINAL_with_Decoy.fa.gz.md5" \
-    "cd .. && singularity run --cleanenv -B $(pwd) ${SINGULARITY_CACHE}/kevinr9525-cancerit-kourami-wget.img bash scripts/download_panel.sh && cd db" \
-    "Kourami: Download Panel"
+cd "${REF_DIR}/kourami/"
 
-# D. Index Panel
+CMD=$(get_container_cmd 0)
+if [ -d "db" ] ; then
+    cd db
+    verify_or_run \
+        "${ASSETS_DIR}/references_checksums/kourami/db/All_FINAL_with_Decoy.fa.gz.md5" \
+        "cd .. && $CMD bash scripts/download_panel.sh && cd db" \
+        "Kourami: Download Panel"
+else
+    # need to have db dir to run verify_or_run
+    mkdir -p db; cd db
+    verify_or_run \
+        "${ASSETS_DIR}/references_checksums/kourami/db/All_FINAL_with_Decoy.fa.gz.md5" \
+        "cd .. && rm -f db $CMD bash scripts/download_panel.sh && cd db" \
+        "Kourami: Download Panel"
+fi
+
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/kourami/db/bwa_0.7.18_index_All_Final_with_Decoy.md5" \
-    "rm -f All_FINAL_with_Decoy.fa.gz.* && singularity run -B $(pwd) ${SINGULARITY_CACHE}/kevinr9525-cancerit-kourami-wget.img bwa index All_FINAL_with_Decoy.fa.gz" \
+    "rm -f All_FINAL_with_Decoy.fa.gz.* && $CMD bwa index All_FINAL_with_Decoy.fa.gz" \
     "Kourami: Index Panel"
 
 
-# ------------------------------------------------------------------
-# 2. BUILD/DOWNLOAD BWAKIT REFERENCES
-# ------------------------------------------------------------------
+# --- BWAKIT ---
 cd ${REF_DIR}
 mkdir -p bwakit; cd bwakit
+CMD=$(get_container_cmd 1)
 
-# A. Run Gen Ref
-# Note: Checking both fa and alt md5s
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/bwakit/hs38DH.fa.md5" \
-    "rm -f hs38DH.fa hs38DH.fa.alt && singularity run -B $(pwd) ${SINGULARITY_CACHE}/quay.io-biocontainers-bwakit-0.7.18.dev1--hdfd78af_0.img run-gen-ref hs38DH" \
-    "BWAKit: Generate Reference (hs38DH)"
+    "rm -f hs38DH.fa hs38DH.fa.alt && $CMD run-gen-ref hs38DH" \
+    "BWAKit: Generate Reference"
 
-# Double check .alt file specifically just in case
 if ! md5sum --status -c "${ASSETS_DIR}/references_checksums/bwakit/hs38DH.fa.alt.md5"; then
-    echo "Error: hs38DH.fa.alt MD5 mismatch even after generation."
+    echo "Error: hs38DH.fa.alt MD5 mismatch."
     exit 1
 fi
 
-# B. Index BWAKit
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/bwakit/bwa_0.7.18_index_hs38DH.md5" \
-    "singularity run -B $(pwd) ${SINGULARITY_CACHE}/quay.io-biocontainers-bwakit-0.7.18.dev1--hdfd78af_0.img bwa index hs38DH.fa" \
-    "BWAKit: Index hs38DH"
+    "$CMD bwa index hs38DH.fa" \
+    "BWAKit: Index"
 
 
-# ------------------------------------------------------------------
-# 3. BUILD/DOWNLOAD HLA-LA REFERENCES
-# ------------------------------------------------------------------
+# --- HLA-LA ---
 cd ${REF_DIR}
 mkdir -p hla-la; cd hla-la
+CMD=$(get_container_cmd 2)
 
-# A. Download Tarball
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT.tar.gz.md5" \
     "rm -f PRG_MHC_GRCh38_withIMGT.tar.gz && wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz" \
-    "HLA-LA: Download Data Package"
+    "HLA-LA: Download"
 
-# B. Extract and Prepare Graph
-# We check the Final Output (serializedGRAPH) to see if we can skip the extraction/prep
-cd PRG_MHC_GRCh38_withIMGT
-# Check if graph exists
-if [ -f "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/serializedGRAPH.md5" ] && \
-   md5sum --status -c "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/serializedGRAPH.md5"; then
-   
-   echo "INFO: HLA-LA Graph already prepared and verified. Skipping extraction and graph prep."
+echo "INFO: Building HLA-LA Graph..."
 
-else
-   # If graph is missing/bad, we must go back up, extract, and run
-   echo "INFO: HLA-LA Graph missing or invalid. Extracting and building..."
-   cd .. # Back to hla-la dir where tar.gz is
-   
-   # Untar
-   tar -xvzf PRG_MHC_GRCh38_withIMGT.tar.gz
-   # We DO NOT remove the tarball yet, in case the next step fails and we need to retry later
-   
-   # Prepare Graph
-   singularity run -B $(pwd) ${SINGULARITY_CACHE}/kevinr9525-genome-seek_hla-v1.0.4.img HLA-LA --action prepareGraph --PRG_graph_dir PRG_MHC_GRCh38_withIMGT
-   
-   # Now we verify the result
-   cd PRG_MHC_GRCh38_withIMGT
-   if md5sum --status -c "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/serializedGRAPH.md5"; then
-       echo "SUCCESS: HLA-LA Graph prepared successfully."
-       # Safe to clean up tarball now
-       rm ../PRG_MHC_GRCh38_withIMGT.tar.gz
-   else 
-       echo "ERROR: HLA-LA Graph generation failed checksum."
-       exit 1
-   fi
+cd ${REF_DIR}/hla-la/ && tar -xvzf PRG_MHC_GRCh38_withIMGT.tar.gz && $CMD HLA-LA --action prepareGraph --PRG_graph_dir PRG_MHC_GRCh38_withIMGT
+
+echo "INFO: HLA-LA graph built"
+
+# Extended Ref
+cd "${REF_DIR}/hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome"
+if [ ! -f "extendedReferenceGenome.fa" ]; then
+    echo "Error: extendedReferenceGenome.fa missing."
+    exit 1
 fi
-
-# C. Index Extended Reference Genome
-cd extendedReferenceGenome
-verify_or_run \
-    "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome/extendedReferenceGenome.fa.md5" \
-    "echo 'Error: Extended reference genome FASTA should have been extracted by previous steps. Check Graph Prep.' && exit 1" \
-    "HLA-LA: Check Extended Reference Fasta"
 
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome/bwa_0.7.17-r1188_index_extendedReferenceGenome.md5" \
-    "singularity run -B $(pwd) ${SINGULARITY_CACHE}/kevinr9525-genome-seek_hla-v1.0.4.img bwa index extendedReferenceGenome.fa" \
-    "HLA-LA: Index Extended Reference"
+    "$CMD bwa index extendedReferenceGenome.fa" \
+    "HLA-LA: Index Extended Ref"
 
-echo "References have been downloaded and built."
+echo "References completed successfully."
