@@ -245,7 +245,7 @@ else
     mkdir -p db; cd db
     verify_or_run \
         "${ASSETS_DIR}/references_checksums/kourami/db/All_FINAL_with_Decoy.fa.gz.md5" \
-        "cd .. && rm -f db $CMD bash scripts/download_panel.sh && cd db" \
+        "cd .. && rm -f db && $CMD bash scripts/download_panel.sh && cd db" \
         "Kourami: Download Panel"
 fi
 
