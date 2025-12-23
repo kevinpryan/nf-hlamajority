@@ -299,9 +299,14 @@ if [ ! -f "extendedReferenceGenome.fa" ]; then
     exit 1
 fi
 
+CMD=$(get_container_cmd 2)
+
+echo "INFO: entering verify_or_run HLA-LA extendedReferenceGenome"
+
+# 3. Use a single container execution for the logic
 verify_or_run \
     "${ASSETS_DIR}/references_checksums/hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome/bwa_0.7.17-r1188_index_extendedReferenceGenome.md5" \
-    "$CMD bwa index extendedReferenceGenome.fa" \
+    "$CMD bash -c 'echo \"bwa index working dir:\" && pwd && bwa index extendedReferenceGenome.fa'" \
     "HLA-LA: Index Extended Ref"
 
 echo "References completed successfully."
