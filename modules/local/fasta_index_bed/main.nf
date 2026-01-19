@@ -1,4 +1,5 @@
 process fasta_index_bed{
+    tag "$meta.sample"
     publishDir "$params.outdir/fasta_bed"
 
     input:

@@ -1,4 +1,6 @@
 process extractContigs {
+    tag "$meta.sample"
+
     publishDir "$params.outdir/extractContigs"
 
     input:

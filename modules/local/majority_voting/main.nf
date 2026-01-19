@@ -1,4 +1,6 @@
 process MAJORITY_VOTE{
+    tag "$meta.sample"
+
     publishDir "$params.outdir/results"
 
     input:
@@ -10,6 +12,9 @@ process MAJORITY_VOTE{
     path("dummy_out8.txt")
     script:
     """
-    Rscript ${params.rundir}/bin/parse_outputs_majority_vote.R --samplename ${meta.sample} --optitype optitype_calls --polysolver polysolver_calls --hlala hlala_calls --kourami kourami_calls --benchmark ${benchmark}
+    parse_outputs_majority_vote.R --samplename ${meta.sample} --optitype optitype_calls --polysolver polysolver_calls --hlala hlala_calls --kourami kourami_calls --benchmark ${benchmark}
     """
 }
+
+//     Rscript ${params.rundir}/bin/parse_outputs_majority_vote.R --samplename ${meta.sample} --optitype optitype_calls --polysolver polysolver_calls --hlala hlala_calls --kourami kourami_calls --benchmark ${benchmark}
+

@@ -1,4 +1,7 @@
 process samtools_index{
+    tag "$meta.sample"
+
+    label "samtools_container"
     publishDir "$params.outdir/index"
 
     input:

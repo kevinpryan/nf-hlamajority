@@ -9,7 +9,6 @@ include {samtools_index} from '../../../modules/local/samtools_index'
 include {markduplicates} from '../../../modules/local/markduplicates'
 include {extractContigs} from '../../../modules/local/extractContigs'
 include {fasta_index_bed} from '../../../modules/local/fasta_index_bed'
-include {subsetBam} from '../../../modules/local/subsetBam'
 include {subsetBam2} from '../../../modules/local/subsetBam'
 
 
@@ -17,15 +16,11 @@ workflow alt_align{
     take: 
     ch_fastq
     ch_ref
-    ch_hlatypes
-    reference_basename
-    chr
-    ch_subset_regions
     main:
     bwa_mem_align_alt_postalt(
        ch_ref,
-       ch_fastq,
-       reference_basename
+       ch_fastq//,
+       //reference_basename
     )  
     samtools_sort(
         bwa_mem_align_alt_postalt.out.bamfile_postalt
@@ -37,38 +32,10 @@ workflow alt_align{
     markduplicates(
         samtools_sorted_index
     )
-// comment out starting here to remove subsetbam
-    /*
-    extractContigs(
-        ch_hlatypes,
-        ch_ref,
-        reference_basename,
-        chr
-    )
-    fasta_index_bed(
-        ch_ref,
-        chr,
-        reference_basename
-    )
-    subsetBam(
-        markduplicates.out.markdupbam,
-        extractContigs.out.alt_contigs,
-        extractContigs.out.hla_contigs,
-        ch_ref,
-        fasta_index_bed.out.fasta_bed,
-        ch_subset_regions
-    )
-*/
-
-
-   subsetBam2(
+    subsetBam2(
         markduplicates.out.markdupbam
     )
-
-// comment out ending here to remove subsetbam
     emit:
     subsetBam2.out.subsetbam 
-    //subsetBam.out.subsetbam
-    //markduplicates.out.markdupbam
 }
 

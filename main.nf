@@ -1,6 +1,10 @@
 #!/usr/bin/env nextflow
 
 include { HLATYPING } from "./workflows/hlatyping"
+include { samtools_sort } from "./modules/local/samtools_sort"
+include { samtools_index } from "./modules/local/samtools_index"
+include { subsetBam2 } from "./modules/local/subsetBam"
+include { bam2fastq } from "./modules/local/bam2fastq"
 
 workflow {
     if (params.bam = true) {
@@ -44,18 +48,14 @@ workflow {
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
     HLATYPING(
         ch_fastq,
-        params.reference_basename,
         params.reference_dir,
-        //params.hlatypes,
-        params.chr,
         params.hla_la_graph,
         params.kourami_ref,
         params.kourami_database,
         params.trimmer,
+        params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged//,
-        //params.adapter_fasta,
-        //params.subset_regions
     )
     }
 }

@@ -1,16 +1,13 @@
 include { RUN_HLALA } from '../../../modules/local/run_hlala'
 
 workflow hlala{
-    /*
-    convert bam to fastq then run Optitype
-    */
     take: 
-    subsetbam
+    bam
     graphdir
 
     main:
     RUN_HLALA(
-        subsetbam,
+        bam,
         graphdir
     )
     emit:

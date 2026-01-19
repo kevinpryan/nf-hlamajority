@@ -1,0 +1,8 @@
+allele	hla_allele_support
+HLA-A11:01	majority_vote_normal_dna;majority_vote_tumor_dna;hlala:normal_dna;optitype:normal_dna;polysolver:normal_dna;hlala:tumor_dna;optitype:tumor_dna;polysolver:tumor_dna
+HLA-A29:02	majority_vote_normal_dna;majority_vote_tumor_dna;optitype:normal_dna;optitype:tumor_dna
+HLA-B07:02	majority_vote_normal_dna;majority_vote_tumor_dna;hlala:normal_dna;optitype:normal_dna;polysolver:normal_dna;hlala:tumor_dna;optitype:tumor_dna;polysolver:tumor_dna
+HLA-B44:03	majority_vote_normal_dna;majority_vote_tumor_dna;hlala:normal_dna;optitype:normal_dna;polysolver:normal_dna;hlala:tumor_dna;optitype:tumor_dna;polysolver:tumor_dna
+HLA-C07:02	majority_vote_normal_dna;majority_vote_tumor_dna;hlala:normal_dna;optitype:normal_dna;polysolver:normal_dna;kourami:normal_dna;hlala:tumor_dna;optitype:tumor_dna;polysolver:tumor_dna;kourami:tumor_dna
+HLA-C16:01	majority_vote_normal_dna;majority_vote_tumor_dna;hlala:normal_dna;optitype:normal_dna;polysolver:normal_dna;kourami:normal_dna;hlala:tumor_dna;optitype:tumor_dna;polysolver:tumor_dna;kourami:tumor_dna
+HLA-A29:06	hlala:normal_dna;hlala:tumor_dna
