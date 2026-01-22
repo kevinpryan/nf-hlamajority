@@ -5,7 +5,7 @@ process MOSDEPTH {
     label "mosdepth_container"
 
     input:
-    tuple val(meta), path(bam)
+    tuple val(meta), path(bam), path(bai)
     path bed
 
     output:
