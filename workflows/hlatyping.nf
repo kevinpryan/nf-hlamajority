@@ -50,13 +50,13 @@ workflow HLATYPING {
         ch_fasta_cram
     )
 
-    mosdepth(
+    MOSDEPTH(
         alt_align.out,
         ch_mosdepth_bed
     )
     
     MEAN_COVERAGE(
-        mosdepth.out.mosdepth_output
+        MOSDEPTH.out.mosdepth_output
     )
     optitype(
         alt_align.out
