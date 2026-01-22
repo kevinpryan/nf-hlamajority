@@ -21,6 +21,8 @@ workflow HLATYPING {
     adapter_fasta
     save_trimmed_fail
     save_merged
+    ch_fasta_cram
+
     main:
     ch_ref = file(reference_dir, checkIfExists: true)
     ch_graph = file(hla_la_graph, checkIfExists: true)
@@ -39,15 +41,17 @@ workflow HLATYPING {
     ch_fastq_align = ch_fastq
     }
     alt_align(
-    ch_fastq_align,
-    ch_ref
+        ch_fastq_align,
+        ch_ref,
+        ch_fasta_cram
     )
     optitype(
-        alt_align.out,
+        alt_align.out
     )
     polysolver(
         alt_align.out,
         ch_ref,
+        ch_fasta_cram
     )
     hlala(
         alt_align.out,
@@ -78,8 +82,8 @@ workflow HLATYPING {
         ch_hlatyping_outputs_grouped,
         ch_benchmark
     )
-MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_core_hlatyping_results_majority_vote_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{ majority_ch}
-MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_core_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{all_calls_ch}
+MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_majority_vote_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{ majority_ch}
+MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{all_calls_ch}
 mixed_ch = majority_ch.mix(all_calls_ch)
 SORT_RESULTS(mixed_ch)
 }

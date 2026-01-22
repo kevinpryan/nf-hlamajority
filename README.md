@@ -13,8 +13,6 @@ This pipeline is an implementation of a majority voting approach for the predict
 
 The MHC genotypes predicted by the highest number of tools is chosen.
 
-This pipeline contains a step where the aligned BAM is subset to chromosome 6, chromosome 6 alt contigs and HLA contigs. Claeys et al did not subset BAMs in this way in their benchmark. In addition, only a version of this Nextflow pipeline that does not subset the BAMs has been tested on a portion of the data used in the Claeys et al benchmark. Future work will include repeating these tests for the version of the pipeline that subsets the aligned BAMs.
-
 ## Usage
 
 Clone the repository
@@ -22,6 +20,14 @@ Clone the repository
 ```bash
 git clone https://github.com/kevinpryan/nf-hlamajority.git
 ```
+
+The pipeline accepts the following input file types:
+
+- FASTQ
+- Aligned BAM
+- CRAM
+
+It is designed for paired-end sequencing data.
 
 Prepare a samplesheet with your input data that looks as follows:
 
@@ -34,7 +40,19 @@ SAMPLE2,SAMPLE2_S1_L003_R1_001.fastq.gz,SAMPLE2_S1_L003_R2_001.fastq.gz
 SAMPLE3,SAMPLE3_S1_L004_R1_001.fastq.gz,SAMPLE3_S1_L004_R2_001.fastq.gz
 ```
 
-Each row represents a pair of fastq files. Currently the pipeline only supports paired-end fastqs.
+or if you are using an aligned data type (BAM, CRAM), prepare the samplesheet as follows:
+
+```csv
+sample,aln
+SAMPLE1,SAMPLE1.bam
+SAMPLE2,SAMPLE2.cram
+```
+
+When using aligned data, you can provide a samplesheet containing both BAM and CRAM files. They do not need to be sorted or indexed.
+
+You must pass the `--aligned` flag when using BAM or CRAM files as input.
+
+When using CRAM files, you must pass the reference fasta used to generate the CRAM file via the `--cram_fasta` parameter. The pipeline only supports one `--cram_fasta` per run.
 
 The script `install_references.sh` must be run before running the pipeline for the first time. The script should be run from **within** the `bin` directory.
 
@@ -42,13 +60,16 @@ The script takes an argument which is a directory (which must exist) where you c
 
 ```bash
 cd bin
-bash install_references.sh /path/to/singularity/cache/dir/
+bash install-references.sh --engine <docker,singularity> --cache /path/to/singularity/cache/dir/
 ```
 
-This will take several hours to run, and can require up to ~40Gb memory.
+`--cache` is only required when using singularity.
 
+A local test of `install-references.sh` on a SLURM HPC using singularity took 1 hour 40 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
 
 When you have installed and built the required references, run the pipeline with:
+
+*for FASTQ input*
 
 ```bash
 nextflow run main.nf \
@@ -57,12 +78,33 @@ nextflow run main.nf \
        -profile <singularity/cluster/.../institute>
 ```
 
+*for BAM input*
+
+```bash
+nextflow run main.nf \
+       --samplesheet <SAMPLESHEET> \
+       --outdir <OUTDIR> \
+       --aligned \
+       -profile <singularity/cluster/.../institute>
+```
+
+*for aligned input including at least one CRAM*
+
+```bash
+nextflow run main.nf \
+       --samplesheet <SAMPLESHEET> \
+       --outdir <OUTDIR> \
+       --aligned \
+       --cram_fasta \
+       -profile <singularity/cluster/.../institute>
+```
+
 ## Dependencies
 
 The pipeline requires the following:
 
 - nextflow
-- singularity
+- singularity or docker
 
 ## References
 

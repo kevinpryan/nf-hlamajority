@@ -8,7 +8,7 @@ process markduplicates{
     tuple val(meta), path(sortedbam), path(sortedbam_index)
 
     output:
-    tuple val(meta), path("*_sorted_mdup.bam*"), emit: markdupbam
+    tuple val(meta), path("*_sorted_mdup.bam"), path("*_sorted_mdup.bam.*"), emit: markdupbam
 
     script:
     """

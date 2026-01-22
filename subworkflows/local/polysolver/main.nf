@@ -16,21 +16,27 @@ workflow polysolver{
     take: 
     subsetbam
     reference
+    ch_fasta_cram
 
     main:
     bam2fastq(
         subsetbam
     )
+
     realignwithoutAlt(
         bam2fastq.out.convertedfastqs,
         reference
         ) 
+
     samtools_sort_index(
-        realignwithoutAlt.out.realignbam
+        realignwithoutAlt.out.realignbam,
+        ch_fasta_cram
         )
+
     RUN_POLYSOLVER(
-        samtools_sort_index.out.sortedbam
+        samtools_sort_index.out.sortedAln
     )
+
     emit:
     RUN_POLYSOLVER.out.polysolver_call 
 }
