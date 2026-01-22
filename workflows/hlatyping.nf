@@ -9,6 +9,8 @@ include { kourami } from "../subworkflows/local/kourami"
 include { FASTP } from "../modules/nf-core/fastp"
 include { MAJORITY_VOTE } from "../modules/local/majority_voting"
 include { SORT_RESULTS } from "../modules/local/sort_results"
+include { MOSDEPTH } from "../modules/local/mosdepth"
+include { MEAN_COVERAGE } from "../modules/local/mosdepth"
 
 workflow HLATYPING {
     take:
@@ -29,6 +31,8 @@ workflow HLATYPING {
     ch_ref_kourami = file(kourami_ref, checkIfExists: true)
     ch_db_kourami = file(kourami_database, checkIfExists: true)
     ch_benchmark = file("$projectDir/assets/benchmarking_results_claeys.csv", checkIfExists: true)
+    ch_mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
+
     if (trimmer == 'fastp') {
     FASTP (
     ch_fastq,
@@ -44,6 +48,15 @@ workflow HLATYPING {
         ch_fastq_align,
         ch_ref,
         ch_fasta_cram
+    )
+
+    mosdepth(
+        alt_align.out,
+        ch_mosdepth_bed
+    )
+    
+    MEAN_COVERAGE(
+        mosdepth.out.mosdepth_output
     )
     optitype(
         alt_align.out
@@ -82,8 +95,9 @@ workflow HLATYPING {
         ch_hlatyping_outputs_grouped,
         ch_benchmark
     )
-MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_majority_vote_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{ majority_ch}
-MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{all_calls_ch}
-mixed_ch = majority_ch.mix(all_calls_ch)
-SORT_RESULTS(mixed_ch)
+    MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_majority_vote_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{ majority_ch }
+    MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }.set{all_calls_ch}
+    mixed_ch = majority_ch.mix(all_calls_ch)
+    SORT_RESULTS(mixed_ch)
+    MEAN_COVERAGE.out.mean_depth.collectFile(name: 'nf_hlamajority_mean_depth_exons2_3_hla_classI.csv', keepHeader: true, skip: 1)
 }

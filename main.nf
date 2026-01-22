@@ -7,6 +7,7 @@ include { bam2fastq } from "./modules/local/bam2fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
 ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+ch_mosdepth_bed = params.mosdepth_bed
 
 workflow {
     if (params.aligned) {
