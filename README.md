@@ -1,6 +1,6 @@
 # nf-hlamajority
 
-![nf-hlamajority metro map](docs/images/bam-input-mosdepth-nf-hlamajority-with-subset-markdup-300dpi.png)
+![nf-hlamajority metro map](docs/images/test-bam-input-mosdepth-nf-hlamajority-with-subset-markdup.drawio.svg)
 
 ## Background
 
