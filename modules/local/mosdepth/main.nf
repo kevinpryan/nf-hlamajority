@@ -32,12 +32,12 @@ process MEAN_COVERAGE {
     tuple val(meta), path(mosdepth_output)
 
     output:
-    tuple val(meta), path("${meta.sample}-mean-depth-hla-classI-exons-2-3.csv"), emit: mean_depth
+    tuple val(meta), path("${meta.sample}-mean-depth-hla-classI-exons-2-3.tsv"), emit: mean_depth
     script:
     """
     calculate_mean_depth_mosdepth.R --input ${mosdepth_output} \
                                     --samplename ${meta.sample} \
-                                    --output ${meta.sample}-mean-depth-hla-classI-exons-2-3.csv
+                                    --output ${meta.sample}-mean-depth-hla-classI-exons-2-3.tsv
     """
 }
 

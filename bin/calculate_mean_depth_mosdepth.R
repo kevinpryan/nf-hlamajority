@@ -24,6 +24,6 @@ opt$input -> input
 opt$output -> output
 
 regions <- read.table(gzfile(input), sep = "\t")
-mean_depth <- round(mean(regions$V5),2)
+mean_depth <- round(mean(regions$V5), 2)
 df <- data.frame(sample = samplename, mean_depth_hla_exons_2_3 = mean_depth)
-write.csv(df, file = output, row.names = F, quote = F)
+write.table(df, file = output, row.names = F, quote = F, sep = "\t")
