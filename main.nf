@@ -24,18 +24,15 @@ workflow {
             return [ meta, alignment_file ]
         }
         | set { ch_alignment }
-        ch_alignment.view()
-        // Process sequence: Index -> Subset -> Bam2Fastq
-        // Note: Ensure samtools_sort_index handles both formats
         samtools_sort_index_before_subset(
                             ch_alignment,
                             ch_fasta_cram
                             ) 
         
-        // Use the dynamic subsetting logic for BAM/CRAM
         SUBSET_ALIGNMENT(samtools_sort_index_before_subset.out.sortedAln, 
                          ch_fasta_cram
                          )
+
         samtools_sort_index_after_subset(
                             SUBSET_ALIGNMENT.out.subset_bam,
                             ch_fasta_cram
@@ -57,6 +54,7 @@ workflow {
     | set { ch_fastq }
     }
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
+
     HLATYPING(
         ch_fastq,
         params.reference_dir,

@@ -174,8 +174,6 @@ C_vote <- majority_vote_comparison(C_identical, C_list, benchmark, "C")
 rownames(combined) <- NULL
 full_output <- combined %>% relocate(., sample, .before = A1) %>% relocate(., tool, .before = A1)
 write.table(full_output, quote = F, row.names = F, sep = "\t", file = paste(samplename, "_all_calls_mhci.tsv", sep = ""))
-dummy_output <- data.frame(x = c(1,2), y = c(3,4))
-write.table(dummy_output, file = "dummy_out8.txt")
 
 majority_output <- data.frame(sample = samplename)
 majority_output$A1 <- A_vote["A1"]
