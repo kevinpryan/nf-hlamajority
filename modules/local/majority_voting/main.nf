@@ -1,7 +1,7 @@
 process MAJORITY_VOTE{
 
     tag "$meta.sample"
-    publishDir "$params.outdir/results"
+    publishDir "$params.outdir/results", mode: 'copy'
     label "r_basic_container"
 
     input:
