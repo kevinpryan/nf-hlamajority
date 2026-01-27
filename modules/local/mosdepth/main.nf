@@ -1,7 +1,7 @@
 process MOSDEPTH {
 
     tag "$meta.sample"
-    publishDir "$params.outdir/mosdepth"
+    publishDir "$params.outdir/mosdepth/${meta.sample}", mode: 'copy'
     label "mosdepth_container"
 
     input:
@@ -25,7 +25,7 @@ process MOSDEPTH {
 process MEAN_COVERAGE {
 
     tag "$meta.sample"
-    publishDir "$params.outdir/mosdepth"
+    publishDir "$params.outdir/mosdepth/${meta.sample}", mode: 'copy'
     label "r_basic_container"
 
     input:
