@@ -6,10 +6,16 @@ include { samtools_sort_index as samtools_sort_index_after_subset } from "./modu
 include { bam2fastq } from "./modules/local/bam2fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
-ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+def cram_ref = params.cram_fasta ? file(params.cram_fasta, checkIfExists: true) : []
+ch_fasta_cram = Channel.value(cram_ref)
+reference_dir    = params.reference_dir    ?: "${params.references_basedir}/bwakit/hs38DH*"
+hla_la_graph     = params.hla_la_graph     ?: "${params.references_basedir}/hla-la"
+kourami_database = params.kourami_database ?: "${params.references_basedir}/kourami/db"
+kourami_ref      = params.kourami_ref      ?: "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
 
 workflow {
     if (params.aligned) {
+        println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
         Channel.fromPath(params.samplesheet, checkIfExists: true)
         | splitCsv(header: true)
@@ -43,6 +49,7 @@ workflow {
         ch_fastq = bam2fastq.out.convertedfastqs
    
     } else {
+    println "fastq input..."
     Channel.fromPath(params.samplesheet, checkIfExists: true)
     | splitCsv( header:true )
     | map { row ->
@@ -57,10 +64,10 @@ workflow {
 
     HLATYPING(
         ch_fastq,
-        params.reference_dir,
-        params.hla_la_graph,
-        params.kourami_ref,
-        params.kourami_database,
+        reference_dir,
+        hla_la_graph,
+        kourami_ref,
+        kourami_database,
         params.trimmer,
         params.adapter_fasta,
         params.save_trimmed_fail,
