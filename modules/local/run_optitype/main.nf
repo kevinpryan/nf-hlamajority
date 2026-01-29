@@ -16,8 +16,8 @@ process RUN_OPTITYPE{
     gunzip *.gz
     OptiTypePipeline.py --input *.1.fq *.2.fq --verbose --dna --outdir ${meta.sample} --prefix ${meta.sample}
     mkdir -p optitype_calls
-    cp "${meta.sample}"/*/*.tsv optitype_calls
-    cp "${meta.sample}"/*/*.pdf optitype_calls
+    cp "${meta.sample}"/*.tsv optitype_calls
+    cp "${meta.sample}"/*.pdf optitype_calls
     rm *.fq
     """
 }

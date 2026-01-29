@@ -38,5 +38,6 @@ workflow polysolver{
     )
 
     emit:
-    RUN_POLYSOLVER.out.polysolver_call 
+    calls = RUN_POLYSOLVER.out.polysolver_call
+    status = RUN_POLYSOLVER.out.run_status 
 }

@@ -10,6 +10,7 @@ include { FASTP } from "../modules/nf-core/fastp"
 include { MAJORITY_VOTE } from "../modules/local/majority_voting"
 include { SORT_RESULTS as SORT_RESULTS_MAJORITY } from "../modules/local/sort_results"
 include { SORT_RESULTS as SORT_RESULTS_MOSDEPTH } from "../modules/local/sort_results"
+//include { SORT_RESULTS as SORT_RESULTS_POLYSOLVER_STATUS } from "../modules/local/sort_results"
 include { MOSDEPTH } from "../modules/local/mosdepth"
 include { MEAN_COVERAGE } from "../modules/local/mosdepth"
 
@@ -72,6 +73,27 @@ workflow HLATYPING {
         ch_ref,
         ch_fasta_cram
     )
+    /*
+    polysolver.out.status
+       .collectFile(
+            name: 'polysolver_run_summary.csv', 
+            storeDir: "${params.outdir}/pipeline_info", 
+            keepHeader: false,
+            sort: true,
+            seed: "Sample,Status" // Adds a header to the top of the file
+        )
+    */
+    polysolver.out.status
+              .collectFile(
+                   name: 'polysolver_run_summary.tsv', 
+                   keepHeader: false, 
+                   storeDir: "${params.outdir}/pipeline_info", // Optional: Save it to results
+                   sort: true,
+                   seed: "Sample\tStatus\n"
+              )
+              //.set{ polysolver_combined_ch }
+  
+    //SORT_RESULTS_POLYSOLVER_STATUS( polysolver_combined_ch )
 
     hlala(
         alt_align.out,
@@ -84,7 +106,7 @@ workflow HLATYPING {
         ch_ref_kourami
     )
 
-    optitype.out.mix(kourami.out, polysolver.out, hlala.out)
+    optitype.out.mix(kourami.out, polysolver.out.calls, hlala.out)
            .groupTuple(by: 0, size: 4)
            .set{ ch_hlatyping_outputs }
 

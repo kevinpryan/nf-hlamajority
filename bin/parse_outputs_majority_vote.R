@@ -84,6 +84,7 @@ optitype <- toolOutputToR.Optitype(optitype_in)
 print(optitype)
 print("reading in polysolver...")
 polysolver <- toolOutputToR.Polysolver(polysolver_in, trim = T)
+polysolver[polysolver == "NA:NA"] <- NA
 print(polysolver)
 print("reading in kourami...")
 kourami <- toolOutputToR.kourami(kourami_in, mhci_only = T, trim = T)
