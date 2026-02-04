@@ -51,12 +51,20 @@ workflow {
     } else {
     println "fastq input..."
     Channel.fromPath(params.samplesheet, checkIfExists: true)
-    | splitCsv( header:true )
-    | map { row ->
+    | splitCsv( header:true, strip:true )
+    | flatMap { row ->
+        if (!row.sample || !row.fastq_1) {
+                // Return empty list to skip this row (ignores trailing empty lines)
+                return [] 
+        }
         meta = row.subMap('sample')
-        [meta, [
-            file(row.fastq_1, checkIfExists: true),
-            file(row.fastq_2, checkIfExists: true)]]
+        def fastq_1 = file(row.fastq_1, checkIfExists: true)
+        def reads = [fastq_1]
+
+        if (row.fastq_2) {
+                reads.add(file(row.fastq_2, checkIfExists: true))
+        }
+        return [ [ meta, reads ] ]
     }
     | set { ch_fastq }
     }
