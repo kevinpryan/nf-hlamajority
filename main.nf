@@ -46,8 +46,12 @@ workflow {
 
         bam2fastq(samtools_sort_index_after_subset.out.sortedAln)
         
-        ch_fastq = bam2fastq.out.convertedfastqs
-   
+        //ch_fastq = bam2fastq.out.convertedfastqs
+        ch_fastq = bam2fastq.out.convertedfastqs.map { meta, reads ->
+            meta.single_end = !(reads instanceof List) || reads.size() == 1
+            tuple(meta, reads)
+        }
+        ch_fastq.view()
     } else {
     println "fastq input..."
     Channel.fromPath(params.samplesheet, checkIfExists: true)
@@ -57,6 +61,7 @@ workflow {
                 // Return empty list to skip this row (ignores trailing empty lines)
                 return [] 
         }
+        /*
         meta = row.subMap('sample')
         def fastq_1 = file(row.fastq_1, checkIfExists: true)
         def reads = [fastq_1]
@@ -65,8 +70,21 @@ workflow {
                 reads.add(file(row.fastq_2, checkIfExists: true))
         }
         return [ [ meta, reads ] ]
+        */
+    def fastq_1 = file(row.fastq_1, checkIfExists: true)
+    def reads = [ fastq_1 ]
+
+    if (row.fastq_2) {
+        reads << file(row.fastq_2, checkIfExists: true)
+    }
+
+    def meta = row.subMap('sample')
+    meta.single_end = (reads.size() == 1)
+
+    return [ [ meta, reads ] ]
     }
     | set { ch_fastq }
+    ch_fastq.view()
     }
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
 

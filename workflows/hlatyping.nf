@@ -37,6 +37,7 @@ workflow HLATYPING {
     ch_mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
 
     if (trimmer == 'fastp') {
+    ch_fastq.view()
     FASTP (
     ch_fastq,
     [],
