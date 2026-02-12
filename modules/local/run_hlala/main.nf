@@ -1,4 +1,4 @@
-process RUN_HLALA{
+process RUN_HLALA {
     tag "$meta.sample"
 
     publishDir "${params.outdir}/hlala_calls/${meta.sample}", mode: 'copy'

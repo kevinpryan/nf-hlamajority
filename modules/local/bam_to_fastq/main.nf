@@ -1,4 +1,4 @@
-process bam2fastq{
+process BAM_TO_FASTQ {
     tag "$meta.sample"
     label 'samtools_container'
     publishDir "$params.outdir/bam2fastq"
@@ -18,12 +18,3 @@ process bam2fastq{
     -0 /dev/null -s /dev/null -n
     """
 }
-/*
-sambamba view \
-    -f "bam" -h -p -l 0 -t ${task.cpus} \
-    *.bam | sambamba sort -p -n -t ${task.cpus} -o - /dev/stdin |
-    samtools fastq /dev/stdin \
-    -1 "${meta.sample}_subset.1.fq" \
-    -2 "${meta.sample}_subset.2.fq" \
-    -0 /dev/null -s /dev/null -n
-*/

@@ -111,7 +111,7 @@ weights <- read.csv(weights_in)
 if (opt$method == "majority") {
   print("using unweighted majority voting")
   weights$A <- rev(rank(weights$A))
-  weigths$B <- rev(rank(weights$B))
+  weights$B <- rev(rank(weights$B))
   weights$C <- rev(rank(weights$C))
   
   ### the commented out code tests out different different scenarios
@@ -172,7 +172,7 @@ if (opt$method == "majority") {
   matching_tools_A <- extract_tools_contributing_to_vote(genotype_list = A_list, genotype_call_vector = A_vote)
   n_tools_called_A <- length(A_list_notna)
   n_tools_support_A <- length(strsplit(matching_tools_A, ",")[[1]])
-  support_A <- n_tools_support_A / n_tools_called_A
+  support_A <- round(n_tools_support_A / n_tools_called_A, 2)
   
   A_df <- data.frame(
     sample = samplename,
@@ -194,7 +194,7 @@ if (opt$method == "majority") {
   matching_tools_B <- extract_tools_contributing_to_vote(genotype_list = B_list, genotype_call_vector = B_vote)
   n_tools_called_B <- length(B_list_notna)
   n_tools_support_B <- length(strsplit(matching_tools_B, ",")[[1]])
-  support_B <- n_tools_support_B / n_tools_called_B
+  support_B <- round(n_tools_support_B / n_tools_called_B, 2)
   
   B_df <- data.frame(
     sample = samplename,
@@ -216,7 +216,7 @@ if (opt$method == "majority") {
   matching_tools_C <- extract_tools_contributing_to_vote(genotype_list = C_list, genotype_call_vector = C_vote)
   n_tools_called_C <- length(C_list_notna)
   n_tools_support_C <- length(strsplit(matching_tools_C, ",")[[1]])
-  support_C <- n_tools_support_C / n_tools_called_C
+  support_C <- round(n_tools_support_C / n_tools_called_C, 2)
   
   C_df <- data.frame(
     sample = samplename,

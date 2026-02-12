@@ -1,15 +1,13 @@
 #!/usr/bin/env nextflow
 
-include {alt_align} from "../subworkflows/local/alt_align"
-include { prepPolysolver } from "../subworkflows/local/prepPolysolver"
-include { optitype } from "../subworkflows/local/optitype"
-include { polysolver } from "../subworkflows/local/polysolver"
-include { hlala } from "../subworkflows/local/hlala"
-include { kourami } from "../subworkflows/local/kourami"
+include { ALT_ALIGN } from "../subworkflows/local/alt_align"
+include { OPTITYPE } from "../subworkflows/local/optitype"
+include { POLYSOLVER } from "../subworkflows/local/polysolver"
+include { HLA_LA } from "../subworkflows/local/hlala"
+include { KOURAMI } from "../subworkflows/local/kourami"
 include { FASTP } from "../modules/nf-core/fastp"
 include { MAJORITY_VOTE } from "../modules/local/majority_voting"
-include { SORT_RESULTS as SORT_RESULTS_MAJORITY } from "../modules/local/sort_results"
-include { SORT_RESULTS as SORT_RESULTS_MOSDEPTH } from "../modules/local/sort_results"
+include { SORT_RESULTS } from "../modules/local/sort_results"
 include { MOSDEPTH } from "../modules/local/mosdepth"
 include { MEAN_COVERAGE } from "../modules/local/mosdepth"
 
@@ -24,19 +22,18 @@ workflow HLATYPING {
     adapter_fasta
     save_trimmed_fail
     save_merged
-    ch_fasta_cram
+    fasta_cram
     weights
     voting_method
 
     main:
 
-    ch_ref = file(reference_dir, checkIfExists: true)
-    ch_graph = file(hla_la_graph, checkIfExists: true)
-    ch_ref_kourami = file(kourami_ref, checkIfExists: true)
-    ch_db_kourami = file(kourami_database, checkIfExists: true)
-    ch_weights = file("$projectDir/assets/benchmarking_results_claeys.csv", checkIfExists: true)
-    ch_weights = file(weights, checkifExists: true)
-    ch_mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
+    ref = file(reference_dir, checkIfExists: true)
+    graph = file(hla_la_graph, checkIfExists: true)
+    ref_kourami = file(kourami_ref, checkIfExists: true)
+    db_kourami = file(kourami_database, checkIfExists: true)
+    weights = file(weights, checkIfExists: true)
+    mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
     method = params.voting_method
 
     if (trimmer == 'fastp') {
@@ -52,43 +49,43 @@ workflow HLATYPING {
     ch_fastq_align = ch_fastq
     }
 
-    alt_align(
+    ALT_ALIGN(
         ch_fastq_align,
-        ch_ref,
-        ch_fasta_cram
+        ref,
+        fasta_cram
     )
 
     MOSDEPTH(
-        alt_align.out,
-        ch_mosdepth_bed
+        ALT_ALIGN.out,
+        mosdepth_bed
     )
     
     MEAN_COVERAGE(
         MOSDEPTH.out.mosdepth_output
     )
 
-    optitype(
-        alt_align.out
+    OPTITYPE(
+        ALT_ALIGN.out
     )
 
-    polysolver(
-        alt_align.out,
-        ch_ref,
-        ch_fasta_cram
+    POLYSOLVER(
+        ALT_ALIGN.out,
+        ref,
+        fasta_cram
     )
 
-    hlala(
-        alt_align.out,
-        ch_graph
+    HLA_LA(
+        ALT_ALIGN.out,
+        graph
     )
      
-    kourami(
-        alt_align.out,
-        ch_db_kourami,
-        ch_ref_kourami
+    KOURAMI(
+        ALT_ALIGN.out,
+        db_kourami,
+        ref_kourami
     )
 
-    optitype.out.mix(kourami.out, polysolver.out, hlala.out)
+    OPTITYPE.out.mix(KOURAMI.out, POLYSOLVER.out, HLA_LA.out)
            .groupTuple(by: 0, size: 4)
            .set{ ch_hlatyping_outputs }
 
@@ -98,26 +95,31 @@ workflow HLATYPING {
                     }
                     .set{ ch_hlatyping_outputs_grouped }
 
+    ch_hlatyping_outputs_grouped
+    .join(MEAN_COVERAGE.out.mean_depth) 
+    .set { ch_majority_vote_inputs }
+
     MAJORITY_VOTE(
-        ch_hlatyping_outputs_grouped,
-        ch_weights,
-        MEAN_COVERAGE.out.mean_depth,
+        ch_majority_vote_inputs,
+        weights,
         voting_method
     )
 
-    MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_votes_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
-                                   .set{ majority_ch }
-
-    MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
+    MAJORITY_VOTE.out.votes.collectFile(name: 'nf_hlamajority_votes_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
+                                   .set{ votes_ch }
+    
+    MAJORITY_VOTE.out.vote_stats.collectFile(name: 'nf_hlamajority_stats_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
+                                   .set{ votes_stats_ch }
+ 
+    MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
                                .set{ all_calls_ch }
 
-    mixed_ch = majority_ch.mix(all_calls_ch)
 
-    SORT_RESULTS_MAJORITY(mixed_ch)
-
-    MEAN_COVERAGE.out.mean_depth.collectFile(name: 'nf_hlamajority_mean_depth_exons2_3_hla_classI.tsv', keepHeader: true, skip: 1,  sort: { it[0] }) { it[1] }
+    MEAN_COVERAGE.out.mean_depth.collectFile(name: 'nf_hlamajority_depth.tsv', keepHeader: true, skip: 1,  sort: { it[0] }) { it[1] }
                                 .set{ mosdepth_combined_ch }
 
-    SORT_RESULTS_MOSDEPTH(mosdepth_combined_ch)
+    mixed_ch = votes_ch.mix(votes_stats_ch, all_calls_ch, mosdepth_combined_ch)
+
+    SORT_RESULTS(mixed_ch)
 
 }

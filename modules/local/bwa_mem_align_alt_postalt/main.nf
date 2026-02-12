@@ -1,4 +1,4 @@
-process bwa_mem_align_alt_postalt{
+process BWA_MEM_ALIGN_ALT_POSTALT {
     tag "$meta.sample"
     publishDir "$params.outdir/bwa-aln-postalt"
     label "bwa_mem_container"
@@ -21,4 +21,3 @@ process bwa_mem_align_alt_postalt{
     samtools flagstat ${meta.sample}_postalt.bam > ${meta.sample}_postalt.bam.flagstat
     """
 }
-

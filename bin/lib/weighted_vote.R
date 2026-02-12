@@ -62,7 +62,7 @@ weighted_vote <- function(calls, weights) {
   
   return(list(
     genotype        = genotype,
-    support         = weight_winner / sum(weights),
+    support         = round(weight_winner / sum(weights), 2),
     weight_winner   = weight_winner,
     total_weight    = sum(weights),
     n_tools_support = n_tools_support,

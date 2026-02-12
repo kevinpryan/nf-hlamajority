@@ -3,38 +3,37 @@
 // does not remove "chr" from header
 // 
 
-include { samtools_sort } from '../../../modules/local/samtools_sort'
-include { bam2fastq } from '../../../modules/local/bam2fastq'
-include { realignwithoutAlt } from '../../../modules/local/realignwithoutAlt'
-include { samtools_index } from '../../../modules/local/samtools_index'
+include { BAM_TO_FASTQ } from '../../../modules/local/bam_to_fastq'
+include { REALIGN_WITHOUT_ALT } from '../../../modules/local/realign_without_alt'
+include { SAMTOOLS_SORT_INDEX } from '../../../modules/local/samtools_sort_index'
 include { RUN_POLYSOLVER } from '../../../modules/local/run_polysolver'
-include { samtools_sort_index } from '../../../modules/local/samtools_sort_index'
-workflow polysolver{
+
+workflow POLYSOLVER{
     /*
     need to realign without alt contigs
     */
     take: 
     subsetbam
     reference
-    ch_fasta_cram
+    fasta_cram
 
     main:
-    bam2fastq(
+    BAM_TO_FASTQ(
         subsetbam
     )
 
-    realignwithoutAlt(
-        bam2fastq.out.convertedfastqs,
+    REALIGN_WITHOUT_ALT(
+        BAM_TO_FASTQ.out.convertedfastqs,
         reference
         ) 
 
-    samtools_sort_index(
-        realignwithoutAlt.out.realignbam,
-        ch_fasta_cram
+    SAMTOOLS_SORT_INDEX(
+        REALIGN_WITHOUT_ALT.out.realignbam,
+        fasta_cram
         )
 
     RUN_POLYSOLVER(
-        samtools_sort_index.out.sortedAln
+        SAMTOOLS_SORT_INDEX.out.sortedAln
     )
 
     emit:

@@ -1,4 +1,4 @@
-process markduplicates{
+process MARK_DUPLICATES {
     tag "$meta.sample"
 
     label "biobambam2_container"

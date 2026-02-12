@@ -1,4 +1,4 @@
-process samtools_sort_index{
+process SAMTOOLS_SORT_INDEX {
     tag "$meta.sample"
 
     label 'samtools_container'

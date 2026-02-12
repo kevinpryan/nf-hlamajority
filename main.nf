@@ -1,14 +1,30 @@
 #!/usr/bin/env nextflow
 
 include { HLATYPING } from "./workflows/hlatyping"
-include { samtools_sort_index as samtools_sort_index_before_subset } from "./modules/local/samtools_sort_index"
-include { samtools_sort_index as samtools_sort_index_after_subset } from "./modules/local/samtools_sort_index"
-include { bam2fastq } from "./modules/local/bam2fastq"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_INDEX } from "./modules/local/samtools_sort_index"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modules/local/samtools_sort_index"
+include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
+/*
 ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+references_basedir = params.references_basedir ?: "${params.projectDir}/references"
+reference_dir = "${references_basedir}/bwakit/hs38DH*"
+hla_la_graph = "${references_basedir}/hla-la"
+kourami_database = "${references_basedir}/kourami/db"
+kourami_ref = "${references_basedir}/kourami/resources/hs38NoAltDH.fa*"
+weights = params.weights ?: "${params.rundir}/assets/benchmarking_results_claeys_cleaned.csv"
+*/
 
 workflow {
+    ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+    references_basedir = params.references_basedir ?: "${projectDir}/references"
+    reference_dir = "${references_basedir}/bwakit/hs38DH*"
+    hla_la_graph = "${references_basedir}/hla-la"
+    kourami_database = "${references_basedir}/kourami/db"
+    kourami_ref = "${references_basedir}/kourami/resources/hs38NoAltDH.fa*"
+    weights = params.weights ?: "${projectDir}/assets/benchmarking_results_claeys_cleaned.csv"
+
     if (params.aligned) {
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
         Channel.fromPath(params.samplesheet, checkIfExists: true)
@@ -24,23 +40,23 @@ workflow {
             return [ meta, alignment_file ]
         }
         | set { ch_alignment }
-        samtools_sort_index_before_subset(
+        SAMTOOLS_SORT_INDEX_BEFORE_INDEX(
                             ch_alignment,
                             ch_fasta_cram
                             ) 
         
-        SUBSET_ALIGNMENT(samtools_sort_index_before_subset.out.sortedAln, 
+        SUBSET_ALIGNMENT(SAMTOOLS_SORT_INDEX_BEFORE_INDEX.out.sortedAln, 
                          ch_fasta_cram
                          )
 
-        samtools_sort_index_after_subset(
+        SAMTOOLS_SORT_INDEX_AFTER_INDEX(
                             SUBSET_ALIGNMENT.out.subset_bam,
                             ch_fasta_cram
                             )
 
-        bam2fastq(samtools_sort_index_after_subset.out.sortedAln)
+        BAM_TO_FASTQ(SAMTOOLS_SORT_INDEX_AFTER_INDEX.out.sortedAln)
         
-        ch_fastq = bam2fastq.out.convertedfastqs
+        ch_fastq = BAM_TO_FASTQ.out.convertedfastqs
    
     } else {
     Channel.fromPath(params.samplesheet, checkIfExists: true)
@@ -57,16 +73,16 @@ workflow {
 
     HLATYPING(
         ch_fastq,
-        params.reference_dir,
-        params.hla_la_graph,
-        params.kourami_ref,
-        params.kourami_database,
+        reference_dir,
+        hla_la_graph,
+        kourami_ref,
+        kourami_database,
         params.trimmer,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
         ch_fasta_cram,
-        params.weights,
+        weights,
         params.voting_method
     )
 }

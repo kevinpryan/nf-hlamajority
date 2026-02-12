@@ -3,64 +3,45 @@
 // Also subsets output bam file to relevant regions for HLA typing
 //
 
-include {bwa_mem_align_alt_postalt} from '../../../modules/local/bwa_mem_align_alt_postalt'
-//include {samtools_sort} from '../../../modules/local/samtools_sort'
-//include {samtools_index} from '../../../modules/local/samtools_index'
-include { samtools_sort_index as samtools_sort_index_before_subset } from '../../../modules/local/samtools_sort_index'
-include { samtools_sort_index as samtools_sort_index_after_subset } from '../../../modules/local/samtools_sort_index'
-include {markduplicates} from '../../../modules/local/markduplicates'
-include {extractContigs} from '../../../modules/local/extractContigs'
-include {fasta_index_bed} from '../../../modules/local/fasta_index_bed'
-//include {subsetBam2} from '../../../modules/local/subsetBam'
-include { SUBSET_ALIGNMENT} from '../../../modules/local/subset_alignment'
+include { BWA_MEM_ALIGN_ALT_POSTALT } from '../../../modules/local/bwa_mem_align_alt_postalt'
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_SUBSET } from '../../../modules/local/samtools_sort_index'
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_SUBSET } from '../../../modules/local/samtools_sort_index'
+include { MARK_DUPLICATES } from '../../../modules/local/markduplicates'
+include { SUBSET_ALIGNMENT } from '../../../modules/local/subset_alignment'
 
-workflow alt_align{
+workflow ALT_ALIGN {
     take: 
     ch_fastq
-    ch_ref
-    ch_fasta_cram
+    ref
+    fasta_cram
 
     main:
-    bwa_mem_align_alt_postalt(
-       ch_ref,
-       ch_fastq//,
-       //reference_basename
-    )  
-    /*
-    samtools_sort(
-        bwa_mem_align_alt_postalt.out.bamfile_postalt
+    BWA_MEM_ALIGN_ALT_POSTALT(
+       ref,
+       ch_fastq
     )
-    samtools_index(
-        samtools_sort.out.sortedbam
-    )
-    */
-    samtools_sort_index_before_subset(
-                        bwa_mem_align_alt_postalt.out.bamfile_postalt,
-                        ch_fasta_cram
+  
+    SAMTOOLS_SORT_INDEX_BEFORE_SUBSET(
+                        BWA_MEM_ALIGN_ALT_POSTALT.out.bamfile_postalt,
+                        fasta_cram
                         )
 
-    //samtools_sorted_index = samtools_sort.out.sortedbam.join(samtools_index.out.bam_indexed, by: 0)
-    samtools_sorted_index = samtools_sort_index_before_subset.out.sortedAln
+    samtools_sorted_index = SAMTOOLS_SORT_INDEX_BEFORE_SUBSET.out.sortedAln
 
-    markduplicates(
+    MARK_DUPLICATES(
         samtools_sorted_index
     )
-    /*
-    subsetBam2(
-        markduplicates.out.markdupbam
-    )
-    */
+
     SUBSET_ALIGNMENT(
-        markduplicates.out.markdupbam,
-        ch_fasta_cram
+        MARK_DUPLICATES.out.markdupbam,
+        fasta_cram
     )
-    samtools_sort_index_after_subset(
+
+    SAMTOOLS_SORT_INDEX_AFTER_SUBSET(
                                      SUBSET_ALIGNMENT.out.subset_bam,
-                                     ch_fasta_cram
-                                     )
-                                     
+                                     fasta_cram
+                                    )
 
     emit:
-    samtools_sort_index_after_subset.out.sortedAln
+    SAMTOOLS_SORT_INDEX_AFTER_SUBSET.out.sortedAln
 }
-

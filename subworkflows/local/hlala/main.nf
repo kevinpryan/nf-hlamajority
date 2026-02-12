@@ -1,6 +1,6 @@
 include { RUN_HLALA } from '../../../modules/local/run_hlala'
 
-workflow hlala{
+workflow HLA_LA{
     take: 
     bam
     graphdir

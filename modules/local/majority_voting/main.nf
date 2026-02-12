@@ -5,9 +5,8 @@ process MAJORITY_VOTE{
     label "r_basic_container"
 
     input:
-    tuple val(meta), path(outputs)
+    tuple val(meta), path(outputs), path(depth)
     path weights
-    path depth
     val method
 
     output:
