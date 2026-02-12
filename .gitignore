@@ -9,4 +9,4 @@ bwakit-0.7.15*
 bwa-0.7.15*
 outdir
 *.out
-
+run-rstudio.sh

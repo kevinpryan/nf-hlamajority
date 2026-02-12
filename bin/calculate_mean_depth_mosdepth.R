@@ -23,7 +23,31 @@ opt$samplename -> samplename
 opt$input -> input
 opt$output -> output
 
-regions <- read.table(gzfile(input), sep = "\t")
-mean_depth <- round(mean(regions$V5), 2)
-df <- data.frame(sample = samplename, mean_depth_hla_exons_2_3 = mean_depth)
-write.table(df, file = output, row.names = F, quote = F, sep = "\t")
+#input <- "../assets/test-outputs/test-outputs-1000genomes/HG00097/mosdepth/HG00097.regions.bed.gz"
+
+regions <- read.table(gzfile(input), sep = "\t", stringsAsFactors = FALSE)
+colnames(regions) <- c("chr", "start", "end", "region", "depth")
+
+# extract gene
+regions$gene <- str_extract(regions$region, "HLA-[ABC]")
+
+# per-gene mean (exons 2+3)
+gene_means <- aggregate(
+  depth ~ gene,
+  data = regions,
+  FUN = mean
+)
+
+# global mean
+global_mean <- mean(regions$depth)
+
+out <- cbind(
+  data.frame(sample = samplename),
+  gene_means,
+  mean_depth_hla_exons_2_3_classI = round(global_mean, 2)
+)
+
+out$depth <- round(out$depth, 2)
+colnames(out)[colnames(out) == "depth"] <- "mean_depth_hla_exons_2_3_gene"
+#output <- "../assets/test-outputs/test-outputs-1000genomes/HG00097/mosdepth/HG00097-mosdepth-summary.tsv"
+write.table(out, file = output, row.names = FALSE, quote = FALSE, sep = "\t")

@@ -6,10 +6,15 @@ process MAJORITY_VOTE{
 
     input:
     tuple val(meta), path(outputs)
-    path benchmark
+    path weights
+    path depth
+    val method
+
     output:
     tuple val(meta), path("*_all_calls_mhci.tsv"), emit: all_calls
-    tuple val(meta), path("*_majority_vote_mhci.tsv"), emit: majority_vote
+    tuple val(meta), path("*_votes_mhci.tsv"), emit: votes
+    tuple val(meta), path("*_votes_mhci_stats.tsv"), emit: vote_stats
+
     script:
     """
     parse_outputs_majority_vote.R --samplename ${meta.sample} \
@@ -17,9 +22,8 @@ process MAJORITY_VOTE{
                                   --polysolver polysolver_calls \
                                   --hlala hlala_calls \
                                   --kourami kourami_calls \
-                                  --benchmark ${benchmark}
+                                  --weights ${weights} \
+                                  --method $method \
+                                  --depth $depth
     """
 }
-
-//     Rscript ${params.rundir}/bin/parse_outputs_majority_vote.R --samplename ${meta.sample} --optitype optitype_calls --polysolver polysolver_calls --hlala hlala_calls --kourami kourami_calls --benchmark ${benchmark}
-

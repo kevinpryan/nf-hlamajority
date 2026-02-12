@@ -178,24 +178,29 @@ majority_vote_comparison <- function(comparison, calls, benchmark, hla) {
   # Get row and column indices of maximum values
   max_indices <- which(comparison == max(comparison), arr.ind = TRUE)
   print("max_indices")
-  print(max_indices)
-  # If there's only one maximum value, return the corresponding row name
+  #print(max_indices)
+  ## If there's only one maximum value, return the corresponding row name
   if (nrow(max_indices) == 1) {
     print("only 1 max value")
     tool_chosen <- rownames(comparison)[max_indices[1,1]]
-    return(calls[[tool_chosen]])
+    calls_out <- calls[[tool_chosen]]
   # If there's no tie, return the call with the highest frequency
   } else if (length(tie_calls) == 1) {
     print("no tie")
-    return(calls[[tie_calls[1]]])
+    calls_out <- calls[[tie_calls[1]]]
   } else if (max(colSums(comparison)) == 0) {
     tool_chosen = rownames(comparison)[which.min(ranks[rownames(comparison)])]
-    return(calls[[tool_chosen]])
+    calls_out <- calls[[tool_chosen]]
   } else {
     # If there's a tie, return the call from the tool with the highest rank
     #print("there's a tie")
     tool_chosen <- tie_calls[which.min(ranks[tie_calls])]
-    return(calls[[tool_chosen]])
+    calls_out <- calls[[tool_chosen]]
   }
+  calls_out <- calls_out[order(
+    as.integer(sub(":.*", "", calls_out)),      # first field
+    as.integer(sub(".*:", "", calls_out))        # second field
+  )]
+  return(calls_out)
 }
 

@@ -25,6 +25,8 @@ workflow HLATYPING {
     save_trimmed_fail
     save_merged
     ch_fasta_cram
+    weights
+    voting_method
 
     main:
 
@@ -32,8 +34,10 @@ workflow HLATYPING {
     ch_graph = file(hla_la_graph, checkIfExists: true)
     ch_ref_kourami = file(kourami_ref, checkIfExists: true)
     ch_db_kourami = file(kourami_database, checkIfExists: true)
-    ch_benchmark = file("$projectDir/assets/benchmarking_results_claeys.csv", checkIfExists: true)
+    ch_weights = file("$projectDir/assets/benchmarking_results_claeys.csv", checkIfExists: true)
+    ch_weights = file(weights, checkifExists: true)
     ch_mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
+    method = params.voting_method
 
     if (trimmer == 'fastp') {
     FASTP (
@@ -90,17 +94,18 @@ workflow HLATYPING {
 
     ch_hlatyping_outputs
                     .map{meta, results ->
-                        //[ meta, results.collect { it.getParent() } ]
                         [ meta, results.collect { it } ]
                     }
                     .set{ ch_hlatyping_outputs_grouped }
 
     MAJORITY_VOTE(
         ch_hlatyping_outputs_grouped,
-        ch_benchmark
+        ch_weights,
+        MEAN_COVERAGE.out.mean_depth,
+        voting_method
     )
 
-    MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_majority_vote_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
+    MAJORITY_VOTE.out.majority_vote.collectFile(name: 'nf_hlamajority_results_votes_combined.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }
                                    .set{ majority_ch }
 
     MAJORITY_VOTE.out.all_calls.collectFile(name: 'nf_hlamajority_hlatyping_results_all_calls.tsv', keepHeader: true, skip: 1, sort: { it[0] }) { it[1] }

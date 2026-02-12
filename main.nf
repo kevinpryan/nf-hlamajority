@@ -65,6 +65,8 @@ workflow {
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
-        ch_fasta_cram
+        ch_fasta_cram,
+        params.weights,
+        params.voting_method
     )
 }
