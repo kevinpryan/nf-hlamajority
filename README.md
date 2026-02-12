@@ -67,6 +67,32 @@ bash install-references.sh --engine <docker,singularity> --cache /path/to/singul
 
 A local test of `install-references.sh` on a SLURM HPC using singularity took 1 hour 40 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
 
+Your references directory should have the following structure:
+
+```bash
+references/
+├── bwakit
+│   ├── hs38DH.fa
+│   ├── hs38DH.fa.alt
+│   ├── hs38DH.fa.amb
+│   ├── hs38DH.fa.ann
+│   ├── hs38DH.fa.bwt
+│   ├── hs38DH.fa.pac
+│   └── hs38DH.fa.sa
+├── hla-la
+│   ├── PRG_MHC_GRCh38_withIMGT
+│   └── PRG_MHC_GRCh38_withIMGT.tar.gz
+└── kourami
+    ├── build.xml
+    ├── db
+    ├── LICENSE
+    ├── pom.xml
+    ├── preprocessing.md
+    ├── README.md
+    ├── resources
+    ├── scripts
+    └── src
+```
 When you have installed and built the required references, run the pipeline with:
 
 *for FASTQ input*
@@ -98,6 +124,46 @@ nextflow run main.nf \
        --cram_fasta \
        -profile <singularity/cluster/.../institute>
 ```
+
+By default, the pipeline uses the majority voting method proposed by Claeys et al, whereby each tool gets one vote and the genotype with the most votes is assigned. In the case of a tie, the genotype of the best-performing tool in the benchmark is assigned (`--voting_method majority`).
+
+An alternative is to carry out a weighted vote (`--voting_method weighted`). By default, the pipeline uses the accuracy scores for each tool in the Claeys et al benchmark (for each HLA gene) as the weight (`assets/benchmarking_results_claeys_cleaned.csv`). The user can specify their own weights by providing their own csv file to `--weights` in the following format:
+
+```bash
+tool,A,B,C
+hlala,0.899,0.972,0.962
+kourami,0.834,0.761,0.796
+optitype,0.98,0.976,0.984
+polysolver,0.949,0.918,0.98
+```
+so for example
+
+*for FASTQ output using weighted voting with the default weights:*
+
+```bash
+nextflow run main.nf \
+       --samplesheet <SAMPLESHEET> \
+       --outdir <OUTDIR> \
+       --voting_method weighted \
+       -profile <singularity/cluster/.../institute>
+```
+
+Whatever method is used, the following cross-sample output files are expected:
+
+```bash
+├── nf_hlamajority_all_calls_sorted.tsv
+├── nf_hlamajority_depth_sorted.tsv
+├── nf_hlamajority_stats_combined_sorted.tsv
+└── nf_hlamajority_votes_combined_sorted.tsv
+```
+
+*nf_hlamajority_all_calls_sorted.tsv*
+
+*nf_hlamajority_depth_sorted.tsv*
+
+*nf_hlamajority_stats_combined_sorted.tsv*
+
+*nf_hlamajority_votes_combined_sorted.tsv*
 
 ## Dependencies
 
