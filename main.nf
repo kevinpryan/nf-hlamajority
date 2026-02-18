@@ -1,19 +1,21 @@
 #!/usr/bin/env nextflow
 
 include { HLATYPING } from "./workflows/hlatyping"
-include { samtools_sort_index as samtools_sort_index_before_subset } from "./modules/local/samtools_sort_index"
-include { samtools_sort_index as samtools_sort_index_after_subset } from "./modules/local/samtools_sort_index"
-include { bam2fastq } from "./modules/local/bam2fastq"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_INDEX } from "./modules/local/samtools_sort_index"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modules/local/samtools_sort_index"
+include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
-def cram_ref = params.cram_fasta ? file(params.cram_fasta, checkIfExists: true) : []
-ch_fasta_cram = Channel.value(cram_ref)
-reference_dir    = params.reference_dir    ?: "${params.references_basedir}/bwakit/hs38DH*"
-hla_la_graph     = params.hla_la_graph     ?: "${params.references_basedir}/hla-la"
-kourami_database = params.kourami_database ?: "${params.references_basedir}/kourami/db"
-kourami_ref      = params.kourami_ref      ?: "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
 
 workflow {
+    ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+    references_basedir = params.references_basedir ?: "${projectDir}/references"
+    reference_dir = "${references_basedir}/bwakit/hs38DH*"
+    hla_la_graph = "${references_basedir}/hla-la"
+    kourami_database = "${references_basedir}/kourami/db"
+    kourami_ref = "${references_basedir}/kourami/resources/hs38NoAltDH.fa*"
+    weights = params.weights ?: "${projectDir}/assets/benchmarking_results_claeys_cleaned.csv"
+
     if (params.aligned) {
         println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
@@ -30,24 +32,23 @@ workflow {
             return [ meta, alignment_file ]
         }
         | set { ch_alignment }
-        samtools_sort_index_before_subset(
+        SAMTOOLS_SORT_INDEX_BEFORE_INDEX(
                             ch_alignment,
                             ch_fasta_cram
                             ) 
         
-        SUBSET_ALIGNMENT(samtools_sort_index_before_subset.out.sortedAln, 
-                         ch_fasta_cram
-                         )
+        SUBSET_ALIGNMENT(SAMTOOLS_SORT_INDEX_BEFORE_INDEX.out.sortedAln, 
+                            ch_fasta_cram
+                        )
 
-        samtools_sort_index_after_subset(
+        SAMTOOLS_SORT_INDEX_AFTER_INDEX(
                             SUBSET_ALIGNMENT.out.subset_bam,
                             ch_fasta_cram
                             )
 
-        bam2fastq(samtools_sort_index_after_subset.out.sortedAln)
+        BAM_TO_FASTQ(SAMTOOLS_SORT_INDEX_AFTER_INDEX.out.sortedAln)
         
-        //ch_fastq = bam2fastq.out.convertedfastqs
-        ch_fastq = bam2fastq.out.convertedfastqs.map { meta, reads ->
+        ch_fastq = BAM_TO_FASTQ.out.convertedfastqs.map { meta, reads ->
             meta.single_end = !(reads instanceof List) || reads.size() == 1
             tuple(meta, reads)
         }
@@ -61,16 +62,6 @@ workflow {
                 // Return empty list to skip this row (ignores trailing empty lines)
                 return [] 
         }
-        /*
-        meta = row.subMap('sample')
-        def fastq_1 = file(row.fastq_1, checkIfExists: true)
-        def reads = [fastq_1]
-
-        if (row.fastq_2) {
-                reads.add(file(row.fastq_2, checkIfExists: true))
-        }
-        return [ [ meta, reads ] ]
-        */
     def fastq_1 = file(row.fastq_1, checkIfExists: true)
     def reads = [ fastq_1 ]
 
@@ -98,6 +89,8 @@ workflow {
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
-        ch_fasta_cram
+        ch_fasta_cram,
+        weights,
+        params.voting_method
     )
 }

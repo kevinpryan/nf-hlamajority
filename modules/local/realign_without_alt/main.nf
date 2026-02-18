@@ -1,4 +1,4 @@
-process realignwithoutAlt{
+process REALIGN_WITHOUT_ALT {
     tag "$meta.sample"
 
     label 'bwa_mem_container'

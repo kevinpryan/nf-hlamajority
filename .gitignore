@@ -9,4 +9,10 @@ bwakit-0.7.15*
 bwa-0.7.15*
 outdir
 *.out
-
+run-rstudio.sh
+counts*.R0k6
+*.slurm
+test-dataset.csv
+test-majority
+test-weighted
+.nextflow*

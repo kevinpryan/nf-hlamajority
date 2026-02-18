@@ -5,7 +5,7 @@
 include { RUN_KOURAMI_ALIGN_EXTRACT } from '../../../modules/local/run_kourami/align_extract'
 include { RUN_KOURAMI_JAR } from '../../../modules/local/run_kourami/kourami_jar'
 
-workflow kourami{
+workflow KOURAMI {
     
     take: 
     bam

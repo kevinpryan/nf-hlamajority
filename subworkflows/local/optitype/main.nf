@@ -1,22 +1,22 @@
-include { bam2fastq } from '../../../modules/local/bam2fastq'
+include { BAM_TO_FASTQ } from '../../../modules/local/bam_to_fastq'
 include { RUN_OPTITYPE } from '../../../modules/local/run_optitype'
 
-workflow optitype{
+workflow OPTITYPE {
     /*
     convert bam to fastq then run Optitype
     */
     take: 
     bam
-    //dna_rna
 
     main:
-    bam2fastq(
+    BAM_TO_FASTQ(
         bam
     )
     RUN_OPTITYPE(
-        bam2fastq.out.convertedfastqs//,
-        //dna_rna
+        BAM_TO_FASTQ.out.convertedfastqs
     )
+
     emit:
     RUN_OPTITYPE.out.optitype_call
 }
+

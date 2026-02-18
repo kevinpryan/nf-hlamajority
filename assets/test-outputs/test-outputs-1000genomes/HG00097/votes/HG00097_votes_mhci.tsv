@@ -1,0 +1,4 @@
+sample	gene	allele1	allele2	matching_tools	method	support	mean_depth_hla_exons_2_3_gene
+HG00097	HLA-A	03:01	24:02	hlala,kourami,optitype,polysolver	weighted_vote	1	41.85
+HG00097	HLA-B	07:02	07:02	hlala,optitype,polysolver	weighted_vote	1	71.54
+HG00097	HLA-C	07:02	07:02	optitype,polysolver	weighted_vote	0.671223513328776	39.27
