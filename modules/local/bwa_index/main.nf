@@ -1,13 +1,14 @@
-process bwa_index{
-    tag "$meta.sample"
-    publishDir "$params.outdir/bwa-aln"
+process BWA_INDEX {
+    label 'bwa_mem_container'
+    publishDir "${params.references_basedir}/${subdir}", mode: 'copy'
+
     input:
     path reference
-    //tuple val(meta), path(reads)
-    //val reference_basename
+    val subdir
+
     output:
-    tuple val(meta), path("*.bam"), emit: bamfile
-    path("*.bam.flagstat")
+    path("*.{amb,ann,bwt,pac,sa}")
+
     script:
     """
     bwa index ${reference}

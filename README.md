@@ -21,6 +21,13 @@ Clone the repository
 git clone https://github.com/kevinpryan/nf-hlamajority.git
 ```
 
+### Build references
+
+`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline:
+
+- Building BWAkit references
+- Indexing reference FASTAs from BWAkit, Kourami, HLA-LA 
+
 The pipeline accepts the following input file types:
 
 - FASTQ
