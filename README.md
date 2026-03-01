@@ -30,8 +30,8 @@ nextflow run main.nf \
              --build_references \
              --outdir <PIPELINE_LOGS_OUTDIR> \
              --references_basedir <PATH_TO_REFERENCES_DIR> \
-       -profile <singularity/docker/cluster/.../institute> \
-  --hla_la_prg_tar </OPTIONAL/PATH/TO/HLA-LA-TAR>
+             --hla_la_prg_tar </OPTIONAL/PATH/TO/HLA-LA-TAR> \
+             -profile <singularity/docker/cluster/.../institute>
 ```
 This workflow carries out the following steps:
 
