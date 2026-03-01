@@ -18,7 +18,7 @@ workflow HLATYPING {
     hla_la_graph
     kourami_ref
     kourami_database
-    trimmer
+    trim
     adapter_fasta
     save_trimmed_fail
     save_merged
@@ -36,7 +36,7 @@ workflow HLATYPING {
     mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
     method = params.voting_method
 
-    if (trimmer == 'fastp') {
+    if (trim == true) {
         FASTP (
         ch_fastq,
         [],
@@ -46,6 +46,7 @@ workflow HLATYPING {
 
         ch_fastq_align = FASTP.out.reads
     } else {
+        println "skipping trimming..."
         ch_fastq_align = ch_fastq
     }
 

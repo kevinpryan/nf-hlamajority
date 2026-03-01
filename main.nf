@@ -11,6 +11,7 @@ params.hla_la_graph = "${params.references_basedir}/hla-la"
 params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
 params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
+params.trim = true
 
 include { REFERENCES } from "./workflows/references"
 include { HLATYPING } from "./workflows/hlatyping"
@@ -80,7 +81,7 @@ workflow {
             meta.single_end = !(reads instanceof List) || reads.size() == 1
             tuple(meta, reads)
         }
-        ch_fastq.view()
+        trim = false
     } else {
     println "fastq input..."
     Channel.fromPath(params.samplesheet, checkIfExists: true)
@@ -103,7 +104,7 @@ workflow {
     return [ [ meta, reads ] ]
     }
     | set { ch_fastq }
-    ch_fastq.view()
+    trim = params.trim
     }
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
 
@@ -113,7 +114,7 @@ workflow {
         hla_la_graph,
         kourami_ref,
         kourami_database,
-        params.trimmer,
+        trim,
         params.adapter_fasta,
         params.save_trimmed_fail,
         params.save_merged,
