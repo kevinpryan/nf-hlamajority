@@ -42,7 +42,7 @@ This workflow carries out the following steps:
 - Compute HLA*LA graph index structure
 - Index reference FASTAs from BWAkit, Kourami, HLA*LA
 
-A local test of the reference building workflow on a SLURM HPC using singularity took 1 hour 40 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
+A local test of the reference building workflow on a SLURM HPC using singularity took 1 hour 46 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
 
 Your references directory should have the following structure:
 
