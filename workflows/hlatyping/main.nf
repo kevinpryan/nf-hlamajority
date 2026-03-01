@@ -1,15 +1,15 @@
 #!/usr/bin/env nextflow
 
-include { ALT_ALIGN } from "../subworkflows/local/alt_align"
-include { OPTITYPE } from "../subworkflows/local/optitype"
-include { POLYSOLVER } from "../subworkflows/local/polysolver"
-include { HLA_LA } from "../subworkflows/local/hlala"
-include { KOURAMI } from "../subworkflows/local/kourami"
-include { FASTP } from "../modules/nf-core/fastp"
-include { MAJORITY_VOTE } from "../modules/local/majority_voting"
-include { SORT_RESULTS } from "../modules/local/sort_results"
-include { MOSDEPTH } from "../modules/local/mosdepth"
-include { MEAN_COVERAGE } from "../modules/local/mosdepth"
+include { ALT_ALIGN } from "../../subworkflows/local/alt_align"
+include { OPTITYPE } from "../../subworkflows/local/optitype"
+include { POLYSOLVER } from "../../subworkflows/local/polysolver"
+include { HLA_LA } from "../../subworkflows/local/hlala"
+include { KOURAMI } from "../../subworkflows/local/kourami"
+include { FASTP } from "../../modules/nf-core/fastp"
+include { MAJORITY_VOTE } from "../../modules/local/majority_voting"
+include { SORT_RESULTS } from "../../modules/local/sort_results"
+include { MOSDEPTH } from "../../modules/local/mosdepth"
+include { MEAN_COVERAGE } from "../../modules/local/mosdepth"
 
 workflow HLATYPING {
     take:
@@ -18,7 +18,7 @@ workflow HLATYPING {
     hla_la_graph
     kourami_ref
     kourami_database
-    trimmer
+    trim
     adapter_fasta
     save_trimmed_fail
     save_merged
@@ -36,18 +36,18 @@ workflow HLATYPING {
     mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
     method = params.voting_method
 
-    if (trimmer == 'fastp') {
-    ch_fastq.view()
-    FASTP (
-    ch_fastq,
-    [],
-    save_trimmed_fail,
-    save_merged
-    )
+    if (trim == true) {
+        FASTP (
+        ch_fastq,
+        [],
+        save_trimmed_fail,
+        save_merged
+        )
 
-    ch_fastq_align = FASTP.out.reads
+        ch_fastq_align = FASTP.out.reads
     } else {
-    ch_fastq_align = ch_fastq
+        println "skipping trimming..."
+        ch_fastq_align = ch_fastq
     }
 
     ALT_ALIGN(
@@ -86,7 +86,7 @@ workflow HLATYPING {
         ref_kourami
     )
 
-    OPTITYPE.out.mix(KOURAMI.out, POLYSOLVER.out, HLA_LA.out)
+    OPTITYPE.out.mix(KOURAMI.out, POLYSOLVER.out.calls, HLA_LA.out)
                 .groupTuple(by: 0, size: 4)
                 .set{ ch_hlatyping_outputs }
 

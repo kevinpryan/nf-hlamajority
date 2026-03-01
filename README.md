@@ -9,7 +9,7 @@ This pipeline is an implementation of a majority voting approach for the predict
 - Optitype
 - Polysolver
 - Kourami
-- HLA-LA
+- HLA*LA
 
 The MHC genotypes predicted by the highest number of tools is chosen.
 
@@ -21,14 +21,86 @@ Clone the repository
 git clone https://github.com/kevinpryan/nf-hlamajority.git
 ```
 
+### Build references
+
+`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline:
+
+```bash
+nextflow run main.nf \
+             --build_references \
+             --outdir <PIPELINE_LOGS_OUTDIR> \
+             --references_basedir <PATH_TO_REFERENCES_DIR> \
+       -profile <singularity/docker/cluster/.../institute> \
+  --hla_la_prg_tar </OPTIONAL/PATH/TO/HLA-LA-TAR>
+```
+This workflow carries out the following steps:
+
+- Build BWAkit references
+- Build Kourami database
+- Download Kourami reference
+- Download HLA*LA reference
+- Compute HLA*LA graph index structure
+- Index reference FASTAs from BWAkit, Kourami, HLA*LA
+
+A local test of the reference building workflow on a SLURM HPC using singularity took 1 hour 40 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
+
+Your references directory should have the following structure:
+
+```bash
+references
+├── bwakit
+│   ├── hs38DH.fa
+│   ├── hs38DH.fa.alt
+│   ├── hs38DH.fa.amb
+│   ├── hs38DH.fa.ann
+│   ├── hs38DH.fa.bwt
+│   ├── hs38DH.fa.pac
+│   └── hs38DH.fa.sa
+├── hla-la
+│   └── PRG_MHC_GRCh38_withIMGT
+├── kourami
+│   ├── build.xml
+│   ├── custom_db
+│   ├── LICENSE
+│   ├── pom.xml
+│   ├── preprocessing.md
+│   ├── README.md
+│   ├── resources
+│   ├── scripts
+│   ├── src
+│   └── target
+└── source
+    └── IMGTHLA
+```
+
+When you have installed and built the required references, you are ready to run the pipeline.
+
+### Running nf-hlamajority
+
 The pipeline accepts the following input file types:
 
 - FASTQ
 - Aligned BAM
 - CRAM
 
-It is designed for paired-end sequencing data.
+It is designed for paired-end DNA sequencing data, but will also accept single-end. HLA genotyping using single-end data is less reliable than paired end, and is not recommended.
 
+#### Test data
+
+To ensure the pipeline is working as expected, the test profile should be run first.
+
+```bash
+nextflow run main.nf \
+       --outdir <OUTDIR> \
+       -profile <test,singularity/docker/cluster/.../institute>
+```
+
+The test dataset is a subset CRAM that is also used as a test dataset for HLA*LA (1000 Genomes sample NA12878).
+
+The expected outputs of each tool from the test dataset can be found at `assets/test-outputs/test-outputs-1000genomes/NA12878/`
+
+#### Running on full datasets
+       
 Prepare a samplesheet with your input data that looks as follows:
 
 **samplesheet.csv**
@@ -53,47 +125,6 @@ When using aligned data, you can provide a samplesheet containing both BAM and C
 You must pass the `--aligned` flag when using BAM or CRAM files as input.
 
 When using CRAM files, you must pass the reference fasta used to generate the CRAM file via the `--cram_fasta` parameter. The pipeline only supports one `--cram_fasta` per run.
-
-The script `install_references.sh` must be run before running the pipeline for the first time. The script should be run from **within** the `bin` directory.
-
-The script takes an argument which is a directory (which must exist) where you can download the singularity images to be used to build/download the references.
-
-```bash
-cd bin
-bash install-references.sh --engine <docker,singularity> --cache /path/to/singularity/cache/dir/
-```
-
-`--cache` is only required when using singularity.
-
-A local test of `install-references.sh` on a SLURM HPC using singularity took 1 hour 40 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
-
-Your references directory should have the following structure:
-
-```bash
-references/
-├── bwakit
-│   ├── hs38DH.fa
-│   ├── hs38DH.fa.alt
-│   ├── hs38DH.fa.amb
-│   ├── hs38DH.fa.ann
-│   ├── hs38DH.fa.bwt
-│   ├── hs38DH.fa.pac
-│   └── hs38DH.fa.sa
-├── hla-la
-│   ├── PRG_MHC_GRCh38_withIMGT
-│   └── PRG_MHC_GRCh38_withIMGT.tar.gz
-└── kourami
-    ├── build.xml
-    ├── db
-    ├── LICENSE
-    ├── pom.xml
-    ├── preprocessing.md
-    ├── README.md
-    ├── resources
-    ├── scripts
-    └── src
-```
-When you have installed and built the required references, run the pipeline with:
 
 *for FASTQ input*
 
@@ -157,13 +188,44 @@ Whatever method is used, the following cross-sample output files are expected:
 └── nf_hlamajority_votes_combined_sorted.tsv
 ```
 
+Example outputs:
+
 *nf_hlamajority_all_calls_sorted.tsv*
+
+```bash
+sample	tool	A1	A2	B1	B2	C1	C2
+NA12878	hlala	11:01	01:01	08:01	56:01	01:02	07:01
+NA12878	kourami	01:01	11:01	56:01	08:01	01:02	07:01
+NA12878	optitype	01:01	11:01	08:01	56:01	01:02	07:01
+NA12878	polysolver	01:01	11:01	08:01	56:01	01:02	07:01
+```
 
 *nf_hlamajority_depth_sorted.tsv*
 
+```bash
+sample	gene	mean_depth_hla_exons_2_3_gene	mean_depth_hla_exons_2_3_classI
+NA12878	HLA-A	15.9	19.79
+NA12878	HLA-B	19.74	19.79
+NA12878	HLA-C	23.73	19.79
+```
+
 *nf_hlamajority_stats_combined_sorted.tsv*
 
+```bash
+sample	gene	allele1	allele2	support	matching_tools	method	weight_winner	total_weight	n_tools_support	n_tools_called	mean_depth_hla_exons_2_3_gene	mean_depth_hla_exons_2_3_classI
+NA12878	HLA-A	01:01	11:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	15.9	19.79
+NA12878	HLA-B	08:01	56:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	19.74	19.79
+NA12878	HLA-C	01:02	07:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	23.73	19.79
+```
+
 *nf_hlamajority_votes_combined_sorted.tsv*
+
+```bash
+sample	gene	allele1	allele2	matching_tools	method	support	mean_depth_hla_exons_2_3_gene
+NA12878	HLA-A	01:01	11:01	hlala,kourami,optitype,polysolver	majority_vote	1	15.9
+NA12878	HLA-B	08:01	56:01	hlala,kourami,optitype,polysolver	majority_vote	1	19.74
+NA12878	HLA-C	01:02	07:01	hlala,kourami,optitype,polysolver	majority_vote	1	23.73
+```
 
 ## Dependencies
 
