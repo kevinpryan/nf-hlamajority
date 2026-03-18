@@ -234,6 +234,18 @@ The pipeline requires the following:
 - nextflow
 - singularity or docker
 
+ ## Important Licensing Information
+
+This pipeline is licensed under the MIT license. However, it is designed to be run with a Docker/Singularity container that includes the POLYSOLVER software. The use of this specific POLYSOLVER container is subject to its own licensing terms, which are more restrictive.
+
+As per the POLYSOLVER license:
+
+- Academic and Non-Profit Use: The container is available for academic and non-profit users.
+- Commercial Use: Commercial use of this pipeline with the provided POLYSOLVER container is prohibited unless you have first obtained a commercial license for Novoalign and any other applicable software within the container.
+
+By using this pipeline, you are agreeing to comply with the licensing terms of all its software components. It is the user's responsibility to ensure they are licensed appropriately. For commercial use, please contact Novocraft Technologies to acquire a license for Novoalign.
+
+
 ## References
 
 Claeys, A., Merseburger, P., Staut, J., Marchal, K., & van den Eynden, J. (2023). Benchmark of tools for in silico prediction of MHC class I and class II genotypes from NGS data. BMC Genomics, 24(1), 1–14. https://doi.org/10.1186/s12864-023-09351-z
