@@ -14,3 +14,20 @@ process RUN_KOURAMI_JAR{
     cp *.result kourami_calls
     """
 }
+
+process RUN_KOURAMI_PLACEHOLDER {
+    tag "$meta.sample"
+    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
+
+    input:
+    val meta
+
+    output:
+    tuple val(meta), path("kourami_calls"), emit: kourami_result
+
+    script:
+    """
+    mkdir -p kourami_calls
+    touch kourami_calls/${meta.sample}.result
+    """
+}

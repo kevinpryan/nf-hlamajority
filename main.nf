@@ -21,6 +21,9 @@ include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
 workflow {
+    if (!params.outdir) {
+        exit 1, "Pipeline parameter '--outdir' is mandatory. Please provide a path for the output directory."
+    }
     references_basedir = params.references_basedir
     
     if (params.build_references){
