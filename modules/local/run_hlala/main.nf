@@ -40,9 +40,6 @@ process RUN_HLALA_PLACEHOLDER {
     output:
     tuple val(meta), path("hlala_calls"), emit: hlala_call
 
-    when:
-    meta.single_end
-
     script:
     """
     mkdir -p hlala_calls
