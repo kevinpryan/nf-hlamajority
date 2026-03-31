@@ -10,7 +10,7 @@ params.hla_la_graph = "${params.references_basedir}/hla-la"
 //params.kourami_database = "${params.references_basedir}/kourami/db"
 params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
-params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
+//params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
 params.trim = true
 
 include { REFERENCES } from "./workflows/references"
