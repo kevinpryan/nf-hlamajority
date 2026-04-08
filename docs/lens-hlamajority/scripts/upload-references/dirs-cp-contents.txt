@@ -1,0 +1,17 @@
+cat dirs-cp-contents-recursively-backup.txt 
+antigen.garnish
+homo_sapiens/annot/
+homo_sapiens/beds/
+homo_sapiens/binfotron
+homo_sapiens/cta_self/
+homo_sapiens/erv/
+homo_sapiens/fasta/
+homo_sapiens/lohhla/
+homo_sapiens/neosplice/peptidome.homo_sapiens
+homo_sapiens/protein/
+homo_sapiens/snaf/snaf-data
+homo_sapiens/snpeff/GRCh38.GENCODEv37
+homo_sapiens/starfusion/GRCh38_gencode_v37_CTAT_lib_Mar012021.plug-n-play
+homo_sapiens/vcfs/
+mhcflurry
+viral
