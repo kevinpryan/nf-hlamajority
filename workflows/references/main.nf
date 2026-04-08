@@ -121,9 +121,11 @@ process HLA_LA_REFERENCE_DOWNLOAD {
 
     script:
     """
-    wget http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
+    wget -O PRG_MHC_GRCh38_withIMGT.tar.gz https://zenodo.org/records/19336310/files/PRG_MHC_GRCh38_withIMGT.tar.gz?download=1 
     """
 }
+
+//unstable URL: http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 
 process HLA_LA_REFERENCE_PREPARE {
     label 'HLALA_CONTAINER'
