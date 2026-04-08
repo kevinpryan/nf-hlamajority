@@ -11,7 +11,7 @@ This pipeline is an implementation of a majority voting approach for the predict
 - Kourami
 - HLA*LA
 
-The MHC genotypes predicted by the highest number of tools is chosen.
+The MHC genotypes predicted by the highest number of tools is selected.
 
 ## Usage
 
@@ -36,8 +36,8 @@ nextflow run main.nf \
 This workflow carries out the following steps:
 
 - Build BWAkit references
-- Build Kourami database
 - Download Kourami reference
+- Build Kourami database
 - Download HLA*LA reference
 - Compute HLA*LA graph index structure
 - Index reference FASTAs from BWAkit, Kourami, HLA*LA
@@ -120,7 +120,7 @@ SAMPLE1,SAMPLE1.bam
 SAMPLE2,SAMPLE2.cram
 ```
 
-When using aligned data, you can provide a samplesheet containing both BAM and CRAM files. They do not need to be sorted or indexed.
+When using aligned data, you can provide a samplesheet containing both BAM and CRAM files. They do not need to be sorted or indexed; coordinate sorting is performed internally where required.
 
 You must pass the `--aligned` flag when using BAM or CRAM files as input.
 
@@ -158,7 +158,9 @@ nextflow run main.nf \
 
 By default, the pipeline uses the majority voting method proposed by Claeys et al, whereby each tool gets one vote and the genotype with the most votes is assigned. In the case of a tie, the genotype of the best-performing tool in the benchmark is assigned (`--voting_method majority`).
 
-An alternative is to carry out a weighted vote (`--voting_method weighted`). By default, the pipeline uses the accuracy scores for each tool in the Claeys et al benchmark (for each HLA gene) as the weight (`assets/benchmarking_results_claeys_cleaned.csv`). The user can specify their own weights by providing their own csv file to `--weights` in the following format:
+An alternative is to carry out a weighted vote (`--voting_method weighted`). By default, the pipeline uses the accuracy scores for each tool in the Claeys et al benchmark (for each HLA gene) as the weight (`assets/benchmarking_results_claeys_cleaned.csv`). Weighted voting prioritises tools that demonstrated higher per-gene accuracy in the Claeys et al. benchmark, allowing higher-confidence calls to dominate in cases of disagreement.
+
+The user can specify their own weights by providing their own csv file to `--weights` in the following format:
 
 ```bash
 tool,A,B,C
@@ -229,10 +231,15 @@ NA12878	HLA-C	01:02	07:01	hlala,kourami,optitype,polysolver	majority_vote	1	23.7
 
 ## Dependencies
 
-The pipeline requires the following:
+The pipeline requires:
+- Nextflow (DSL2)
+- Singularity/Apptainer or Docker
+- Java (compatible with your Nextflow version)
 
-- nextflow
-- singularity or docker
+
+## Integration with Landscape of Effective Neoantigens Software (LENS)
+
+Instructions for running nf-hlamajority as part of the LENS neoantigen prediction pipeline are found at `docs/lens-hlamajority/`.
 
  ## Important Licensing Information
 
