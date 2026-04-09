@@ -23,26 +23,26 @@ git clone https://github.com/kevinpryan/nf-hlamajority.git
 
 ### Build references
 
-`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline:
+`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline. `--outdir` is the desired pipeline log directory. `--references_basedir` is the path to the directory where you wish to store your references. Default: `nf-hlamajority/references`.
 
 ```bash
 nextflow run main.nf \
              --build_references \
              --outdir <PIPELINE_LOGS_OUTDIR> \
              --references_basedir <PATH_TO_REFERENCES_DIR> \
-             --hla_la_prg_tar </OPTIONAL/PATH/TO/HLA-LA-TAR> \
-             -profile <singularity/docker/cluster/.../institute>
+             -profile <singularity/docker/awsbatch>
 ```
+
 This workflow carries out the following steps:
 
 - Build BWAkit references
-- Download Kourami reference
+- Download the Kourami reference
 - Build Kourami database
 - Download HLA*LA reference
 - Compute HLA*LA graph index structure
 - Index reference FASTAs from BWAkit, Kourami, HLA*LA
 
-A local test of the reference building workflow on a SLURM HPC using singularity took 1 hour 46 minutes to run, and required approximately 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
+A local test of the reference building workflow on a SLURM HPC using Singularity took 2 hours 43 minutes to run, and required a maximum of 33.4 GB of RAM. This reference is static and can be reused across genotyping runs.
 
 Your references directory should have the following structure:
 
@@ -83,7 +83,7 @@ The pipeline accepts the following input file types:
 - Aligned BAM
 - CRAM
 
-It is designed for paired-end DNA sequencing data, but will also accept single-end. HLA genotyping using single-end data is less reliable than paired end, and is not recommended.
+It is designed for paired-end DNA sequencing data, but will also accept single-end data. However, HLA genotyping using single-end data is less reliable than paired-end and is not recommended.
 
 #### Test data
 
@@ -92,10 +92,10 @@ To ensure the pipeline is working as expected, the test profile should be run fi
 ```bash
 nextflow run main.nf \
        --outdir <OUTDIR> \
-       -profile <test,singularity/docker/cluster/.../institute>
+       -profile <test,singularity/docker/awsbatch>
 ```
 
-The test dataset is a subset CRAM that is also used as a test dataset for HLA*LA (1000 Genomes sample NA12878).
+The test dataset is a CRAM file (316 MB) provided through the [HLA*LA GitHub repository](https://github.com/DiltheyLab/HLA-LA/tree/master) (1000 Genomes sample NA12878).
 
 The expected outputs of each tool from the test dataset can be found at `assets/test-outputs/test-outputs-1000genomes/NA12878/`
 
@@ -239,7 +239,7 @@ The pipeline requires:
 
 ## Integration with Landscape of Effective Neoantigens Software (LENS)
 
-Instructions for running nf-hlamajority as part of the LENS neoantigen prediction pipeline are found at `docs/lens-hlamajority/`.
+Instructions for running nf-hlamajority as part of the LENS neoantigen prediction pipeline can be found at `docs/lens-hlamajority/`.
 
  ## Important Licensing Information
 
@@ -251,7 +251,6 @@ As per the POLYSOLVER license:
 - Commercial Use: Commercial use of this pipeline with the provided POLYSOLVER container is prohibited unless you have first obtained a commercial license for Novoalign and any other applicable software within the container.
 
 By using this pipeline, you are agreeing to comply with the licensing terms of all its software components. It is the user's responsibility to ensure they are licensed appropriately. For commercial use, please contact Novocraft Technologies to acquire a license for Novoalign.
-
 
 ## References
 
