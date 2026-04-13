@@ -1,8 +1,8 @@
 # Implementing LENS-hlamajority on AWS batch
 
-The original LENS pipeline can be found on GitLab [here](https://gitlab.com/reproducible-analyses-framework-and-tools/). To integrate `nf-hlamajority` into LENS, we made a mirror of the GitLab project containing LENS, which can be found [here](https://gitlab.com/healed-reproducible-analyses-framework-and-tools/). *LENS-hlamajority* was developed against `lens-v1.7-dev`. This fork is not automatically kept in sync with upstream LENS.
+The Landscape of Effective Neoantigens Software (LENS) pipeline can be found on GitLab [here](https://gitlab.com/reproducible-analyses-framework-and-tools/). To integrate `nf-hlamajority` into LENS, we made a mirror of the GitLab project containing LENS, which can be found [here](https://gitlab.com/healed-reproducible-analyses-framework-and-tools/). *LENS-hlamajority* was developed against `lens-v1.7-dev`. This fork is not automatically kept in sync with upstream LENS.
 
-At the time *LENS-hlamajority* was developed, the use of RAFT/LENS using cloud-based service providers, such as AWS Batch and Google Cloud Compute, was an experimental feature. This requires the user to download and build the references locally and then upload them to their S3 bucket (if using AWS) or a Google Cloud storage bucket manually.
+At the time *LENS-hlamajority* was developed, the use of LENS using cloud-based service providers, such as AWS Batch and Google Cloud Compute, was an experimental feature. This requires the user to download and build the references locally and then upload them to their S3 bucket (if using AWS) or a Google Cloud storage bucket manually.
 
 To facilitate running *LENS-hlamajority* within this experimental framework, we developed custom bash scripts. These are designed for implementing LENS on AWS Batch. Here we provide a set of instructions for running LENS (with *nf-hlamajority*) on AWS Batch. 
 
@@ -12,7 +12,7 @@ Running *LENS-hlamajority* on AWS Batch involves three components:
 
 1. **Local setup (EC2 instance)**
    - Build *nf-hlamajority* references
-   - Install RAFT and initialise LENS
+   - Install Reproducible Analyses Framework and Tools (RAFT) and initialise LENS
 
 2. **S3 storage**
    - FASTQs
@@ -47,7 +47,7 @@ Create an EC2 instance on AWS and install Nextflow. Note: this instance must hav
 
 ### Step 3
 
-Install RAFT from `pip` using the instructions at [uselens.io](uselens.io). 
+Install RAFT from `pip` using the instructions at [uselens.io](uselens.io). RAFT is a wrapper used to set up LENS projects, written in Python.
   
 ```{bash}
 pip install --user reproducible-analyses-framework-and-tools
@@ -123,7 +123,7 @@ This ensures RAFT fetches required workflow and subworkflow modules that are no 
 
 > **Run on EC2**
 
-Run the following commands to download them from alternative sources first. Run these commands from your `references` directory. The links used by RAFT to download `Homo_sapiens_assembly38.dbsnp138.vcf.gz` and `Homo_sapiens.assembly38.fa` do not tend to work, so they must be downloaded manually.
+At the time of writing, the links to `Homo_sapiens_assembly38.dbsnp138.vcf.gz` and `Homo_sapiens.assembly38.fa` used by RAFT/LENS do not work. Run the following commands to download them from alternative sources. Run these commands from your `references` directory. The links used by RAFT to download `Homo_sapiens_assembly38.dbsnp138.vcf.gz` and `Homo_sapiens.assembly38.fa` do not tend to work, so they must be downloaded manually.
 
 ```
 # run this from your references directory

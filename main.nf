@@ -7,7 +7,6 @@ params.kourami_commit = "545c770"
 params.references_basedir = "references"
 params.reference_dir = "${params.references_basedir}/bwakit/hs38DH*"
 params.hla_la_graph = "${params.references_basedir}/hla-la"
-//params.kourami_database = "${params.references_basedir}/kourami/db"
 params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
 //params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
@@ -38,11 +37,6 @@ workflow {
     } else {
         log.info "Mode: Running nf-hlamajority"
         ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
-        //reference_dir = "${references_basedir}/bwakit/hs38DH*"
-        //hla_la_graph = "${references_basedir}/hla-la"
-        //kourami_database = "${references_basedir}/kourami/db"
-        //kourami_ref = "${references_basedir}/kourami/resources/hs38NoAltDH.fa*"
-        //weights = params.weights ?: "${projectDir}/assets/benchmarking_results_claeys_cleaned.csv"
         reference_dir = params.reference_dir
         hla_la_graph = params.hla_la_graph
         kourami_database = params.kourami_database

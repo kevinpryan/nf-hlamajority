@@ -144,23 +144,6 @@ process HLA_LA_REFERENCE_PREPARE {
     """
 }
 
-/*
-process HLA_LA_REFERENCE_FROM_LOCAL {
-    label 'HLALA_CONTAINER'
-
-    input:
-    path hla_la_tar
-
-    output:
-    path "PRG_MHC_GRCh38_withIMGT.tar.gz", emit: reference_zip
-
-    script:
-    """
-    cp ${hla_la_tar} PRG_MHC_GRCh38_withIMGT.tar.gz
-    """
-}
-*/
-
 workflow REFERENCES {
     take:
     reference_dir
@@ -199,13 +182,6 @@ workflow REFERENCES {
                      BUILD_BWAKIT.out.reference,
                      "bwakit"
                     )
-    /*
-    HLA_LA_REFERENCE_DOWNLOAD()
-
-    HLA_LA_REFERENCE_PREPARE(
-                            HLA_LA_REFERENCE_DOWNLOAD.out.reference_zip
-                            )
-    */
     Channel
     .from(
         params.hla_la_prg_tar 
@@ -215,7 +191,6 @@ workflow REFERENCES {
     .set { ch_hla_la_tar }
 
     if (params.hla_la_prg_tar) {
-        //HLA_LA_REFERENCE_FROM_LOCAL(ch_hla_la_tar)
         hla_la_zip = file(params.hla_la_prg_tar) //HLA_LA_REFERENCE_FROM_LOCAL.out.reference_zip
     } else {
         log.warn "No --hla_la_prg_tar provided; attempting automated download (may fail)"
