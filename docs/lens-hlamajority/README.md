@@ -334,7 +334,7 @@ The following helper scripts are used:
 - `02-lens-nextflow-run-script.sh` → launches the pipeline
 - `03-run-all.sh` → wrapper that runs both steps
 
-Copy the scripts: 01-lens-setup-script.sh, 02-lens-nextflow-run-script.sh, 03-run-all.sh and nextflow-for-aws-lens.config to the directory containing your RAFT instance. 
+Copy the scripts: `01-lens-setup-script.sh`, `02-lens-nextflow-run-script.sh`, `03-run-all.sh` and `nextflow-for-aws-lens.config` to the directory containing your RAFT instance. This is the directory containing your `projects`, `references`, `bams`, `fastqs`, `imgs`, `metadata` and `shared` directories.
 
 First, make the following modifications to `nextflow-for-aws-lens.config`:
 
@@ -347,15 +347,21 @@ First, make the following modifications to `nextflow-for-aws-lens.config`:
 03-run-all.sh arguments:
 
 ```
--p : project name
+-p : project name (must not already exist in raft-installation/projects)
 -m : manifest name (must exist on S3 under metadata/ots)
 -r : absolute path to RAFT installation
 -b : base path to S3 bucket (references at s3://<bucket>/references/cloud/)
 ```
 
+Run the pipeline as follows:
+
+```
+bash 03-run-all.sh -p <project-name> -m <your-manifest.tsv> -b <s3://<bucket> -r </home/ec2-user/path/to/raft/installation/directory>
+```
+
 `01-lens-setup-script.sh` runs RAFT in `--setup-only` mode, which pulls the required modules from GitLab and constructs the final nextflow config file, which will be named `nextflow-for-aws-lens-${LENS_PROJ_ID}-complete.config`. This config file will be found in a folder in your current directory. If you want to check the output of this script before running `02-lens-nextflow-run-script.sh`, comment out that portion of the script. 
 
-Your `.nextflow.log`, along with all Nextflow trace files, is found in your project logs directory. All results and work directories will be found in your S3 bucket. 
+Your `.nextflow.log`, along with all Nextflow trace files, is found in your project logs directory. All results and work directories will be found in your S3 bucket.
 
 ## Verified versions
 
@@ -370,7 +376,6 @@ Your `.nextflow.log`, along with all Nextflow trace files, is found in your proj
 ## AWS Batch Compute Environments
 
 LENS-hlamajority is executed on AWS Batch using ECS-backed managed compute environments. No custom AMIs are required. All compute environments are based on the ECS‑Optimized Amazon Linux 2 AMI provided by AWS for the target region.
-
 
 ### Queues
 Two AWS Batch queues are used:

@@ -1,4 +1,3 @@
-cat dirs-cp-contents-recursively-backup.txt 
 antigen.garnish
 homo_sapiens/annot/
 homo_sapiens/beds/
