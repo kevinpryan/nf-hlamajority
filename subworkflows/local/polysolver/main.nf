@@ -4,7 +4,7 @@
 // 
 
 include { BAM_TO_FASTQ } from '../../../modules/local/bam_to_fastq'
-include { REALIGN_WITHOUT_ALT } from '../../../modules/local/realign_without_alt'
+include { BWA_REALIGN } from '../../../modules/local/bwa_realign'
 include { SAMTOOLS_SORT_INDEX } from '../../../modules/local/samtools_sort_index'
 include { RUN_POLYSOLVER } from '../../../modules/local/run_polysolver'
 
@@ -22,13 +22,13 @@ workflow POLYSOLVER{
         subsetbam
     )
 
-    REALIGN_WITHOUT_ALT(
+    BWA_REALIGN(
         BAM_TO_FASTQ.out.convertedfastqs,
         reference
         ) 
 
     SAMTOOLS_SORT_INDEX(
-        REALIGN_WITHOUT_ALT.out.realignbam,
+        BWA_REALIGN.out.realignbam,
         fasta_cram
         )
 

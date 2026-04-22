@@ -1,8 +1,8 @@
-process REALIGN_WITHOUT_ALT {
+process BWA_REALIGN {
     tag "$meta.sample"
 
     label 'bwa_mem_container'
-    publishDir "$params.outdir/realignwithoutAlt"
+    publishDir "$params.outdir/bwa_realign"
     
     input:
     tuple val(meta), path(reads)
