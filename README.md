@@ -4,14 +4,14 @@
 
 ## Background
 
-This pipeline is an implementation of a majority voting approach for the prediction of MHC Class I genotypes from DNA sequencing data. This approach was proposed by Claeys et al 2023 based on their benchmarking study. `nf-hlamajority` takes paired-end DNA-sequencing data and runs four tools:
+This pipeline implements a majority voting approach for predicting HLA Class I genotypes from DNA sequencing data. This approach was proposed by Claeys et al. 2023 based on their benchmarking study. `nf-hlamajority` takes paired-end DNA-sequencing data and runs four tools:
 
 - Optitype
 - Polysolver
 - Kourami
 - HLA*LA
 
-The MHC genotypes predicted by the highest number of tools is selected.
+For each gene (HLA-A, B, C), the HLA genotype predicted by the highest number of tools is selected.
 
 ## Usage
 
@@ -23,13 +23,12 @@ git clone https://github.com/kevinpryan/nf-hlamajority.git
 
 ### Build references
 
-`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline. `--outdir` is the desired pipeline log directory. `--references_basedir` is the path to the directory where you wish to store your references. Default: `nf-hlamajority/references`.
+`--build_references` triggers a parallel workflow to build references, which is a prerequisite to running the pipeline. `--outdir` is the desired pipeline log directory. The references will be placed in a directory called `references`, i.e. `nf-hlamajority/references`.
 
 ```bash
 nextflow run main.nf \
              --build_references \
              --outdir <PIPELINE_LOGS_OUTDIR> \
-             --references_basedir <PATH_TO_REFERENCES_DIR> \
              -profile <singularity/docker/awsbatch>
 ```
 
@@ -87,7 +86,7 @@ It is designed for paired-end DNA sequencing data, but will also accept single-e
 
 #### Test data
 
-To ensure the pipeline is working as expected, the test profile should be run first.
+To ensure the pipeline is working as expected, the test profile should be run first. `--outdir` is the directory where the `nf-hlamajority` results will be stored.
 
 ```bash
 nextflow run main.nf \
@@ -120,9 +119,9 @@ SAMPLE1,SAMPLE1.bam
 SAMPLE2,SAMPLE2.cram
 ```
 
-When using aligned data, you can provide a samplesheet containing both BAM and CRAM files. They do not need to be sorted or indexed; coordinate sorting is performed internally where required.
-
 You must pass the `--aligned` flag when using BAM or CRAM files as input.
+
+When using aligned data, you can provide a samplesheet containing both BAM and CRAM files. They do not need to be sorted or indexed; coordinate sorting is performed internally.
 
 When using CRAM files, you must pass the reference fasta used to generate the CRAM file via the `--cram_fasta` parameter. The pipeline only supports one `--cram_fasta` per run.
 
@@ -132,7 +131,7 @@ When using CRAM files, you must pass the reference fasta used to generate the CR
 nextflow run main.nf \
        --samplesheet <SAMPLESHEET> \
        --outdir <OUTDIR> \
-       -profile <singularity/cluster/.../institute>
+       -profile <singularity/docker/awsbatch>
 ```
 
 *for BAM input*
@@ -142,7 +141,7 @@ nextflow run main.nf \
        --samplesheet <SAMPLESHEET> \
        --outdir <OUTDIR> \
        --aligned \
-       -profile <singularity/cluster/.../institute>
+       -profile <singularity/docker/awsbatch>
 ```
 
 *for aligned input including at least one CRAM*
@@ -153,14 +152,14 @@ nextflow run main.nf \
        --outdir <OUTDIR> \
        --aligned \
        --cram_fasta \
-       -profile <singularity/cluster/.../institute>
+       -profile <singularity/docker/awsbatch>
 ```
 
-By default, the pipeline uses the majority voting method proposed by Claeys et al, whereby each tool gets one vote and the genotype with the most votes is assigned. In the case of a tie, the genotype of the best-performing tool in the benchmark is assigned (`--voting_method majority`).
+By default, the pipeline uses the majority voting method proposed by Claeys et al, whereby each tool gets one vote, and the genotype with the most votes is assigned. In the case of a tie, the genotype of the best-performing tool in the benchmark is assigned (`--voting_method majority`).
 
 An alternative is to carry out a weighted vote (`--voting_method weighted`). By default, the pipeline uses the accuracy scores for each tool in the Claeys et al benchmark (for each HLA gene) as the weight (`assets/benchmarking_results_claeys_cleaned.csv`). Weighted voting prioritises tools that demonstrated higher per-gene accuracy in the Claeys et al. benchmark, allowing higher-confidence calls to dominate in cases of disagreement.
 
-The user can specify their own weights by providing their own csv file to `--weights` in the following format:
+The user can specify their own weights by providing their own CSV file to `--weights` in the following format:
 
 ```bash
 tool,A,B,C
@@ -178,7 +177,7 @@ nextflow run main.nf \
        --samplesheet <SAMPLESHEET> \
        --outdir <OUTDIR> \
        --voting_method weighted \
-       -profile <singularity/cluster/.../institute>
+       -profile <singularity/docker/awsbatch>
 ```
 
 Whatever method is used, the following cross-sample output files are expected:
@@ -235,7 +234,6 @@ The pipeline requires:
 - Nextflow (DSL2)
 - Singularity/Apptainer or Docker
 - Java (compatible with your Nextflow version)
-
 
 ## Integration with Landscape of Effective Neoantigens Software (LENS)
 
