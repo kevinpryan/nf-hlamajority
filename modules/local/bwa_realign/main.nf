@@ -12,13 +12,15 @@ process BWA_REALIGN {
     tuple val(meta), path("*.bam"), emit: realignbam
     path("*_realign.sam.header")
     path("*_realign.sam.flagstat")
+    path("*.bam.md5")
 
     script:
     """
-    bwa mem -t ${task.cpus} GCA_000001405.15_GRCh38_no_alt_analysis_set.fna ${reads} > ${meta.sample}_realign.sam
+    bwa mem -K 10000000 -t ${task.cpus} GCA_000001405.15_GRCh38_no_alt_analysis_set.fna ${reads} > ${meta.sample}_realign.sam
     samtools view -H ${meta.sample}_realign.sam > ${meta.sample}_realign.sam.header
     samtools flagstat ${meta.sample}_realign.sam > ${meta.sample}_realign.sam.flagstat
     samtools view -bh -o ${meta.sample}.bam ${meta.sample}_realign.sam
     rm "${meta.sample}_realign.sam"
+    md5sum ${meta.sample}.bam > ${meta.sample}.bam.md5
     """
 }
