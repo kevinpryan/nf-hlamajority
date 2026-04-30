@@ -1,0 +1,4 @@
+sample	gene	allele1	allele2	support	matching_tools	method	weight_winner	total_weight	n_tools_support	n_tools_called	mean_depth_hla_exons_2_3_gene	mean_depth_hla_exons_2_3_classI
+NA12878	HLA-A	01:01	11:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	15.9	19.79
+NA12878	HLA-B	08:01	56:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	19.74	19.79
+NA12878	HLA-C	01:02	07:01	1	hlala,kourami,optitype,polysolver	majority_vote	4	4	4	4	23.73	19.79
