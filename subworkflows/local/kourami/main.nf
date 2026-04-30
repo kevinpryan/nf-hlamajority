@@ -27,7 +27,6 @@ workflow KOURAMI {
 
     bam
         // Create a key-only channel from input [meta]
-        //.map { meta, bam, bai -> meta }
         .map { meta, bam, bai -> [ meta ] } // wrap in list to make it a tuple key
         // Join with output. If output is missing (timeout), result is null.
         .join(RUN_KOURAMI_JAR.out.kourami_result, remainder: true)
@@ -41,12 +40,11 @@ workflow KOURAMI {
         }
         .set { ch_kourami_routing }
 
-    // 3. Run Placeholder for Timed Out samples
+    // Run Placeholder for Timed Out samples
     RUN_KOURAMI_PLACEHOLDER(
         ch_kourami_routing.failure
     )
 
     emit:
-    //RUN_KOURAMI_JAR.out.kourami_result
     calls = ch_kourami_routing.success.mix(RUN_KOURAMI_PLACEHOLDER.out.kourami_result)
 }

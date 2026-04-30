@@ -12,6 +12,6 @@ process MARK_DUPLICATES {
 
     script:
     """
-    bammarkduplicates I=${sortedbam} O=${meta.sample}_sorted_mdup.bam index=1 rmdup=0 dupmd5=1
+    bammarkduplicates I=${sortedbam} O=${meta.sample}_sorted_mdup.bam index=1 rmdup=0
     """
 }

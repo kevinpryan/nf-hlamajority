@@ -42,7 +42,7 @@ workflow HLA_LA {
     // to match the placeholder output structure if needed, 
     // or just mix if structures align.
     
-    // Note: ch_routing.success likely looks like [path] or [meta, path] 
+    // ch_routing.success looks like [path] or [meta, path] 
     // depending on exact join behavior. 
     // join(remainder:true) returns [key, val]. 
     // So ch_routing.success is [meta, path].

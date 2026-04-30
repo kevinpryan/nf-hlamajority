@@ -43,7 +43,6 @@ process GET_KOURAMI {
 }
 
 process KOURAMI_DOWNLOAD_HS38NOALTDH {
-    //publishDir "${params.references_basedir}/kourami/resources", mode: 'copy'
     publishDir "${params.references_basedir}/kourami/resources",
                mode: 'copy',
                saveAs: { file -> new File(file).getName() }
@@ -55,7 +54,6 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
 
     output:
     path("${kourami_repo}/resources/hs38NoAltDH.fa"), emit: reference
-    //path("${kourami_repo}/reso/hs38NoAltDH.fa"), emit: reference
 
     script:
     """
@@ -67,7 +65,7 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
 process BUILD_KOURAMI {
     publishDir "${params.references_basedir}", mode: 'copy'
 
-    container 'kevinr9525/cancerit-kourami:wget' // Nextflow handles the engine switching
+    container 'kevinr9525/cancerit-kourami:wget' 
     
     input:
     path imgt_repo
@@ -75,7 +73,7 @@ process BUILD_KOURAMI {
     path kourami_repo, stageAs: 'kourami_src' 
 
     output:
-    path "kourami" // This captures the directory we create in the script
+    path "kourami" 
 
     script:
     """
@@ -125,8 +123,6 @@ process HLA_LA_REFERENCE_DOWNLOAD {
     wget -O PRG_MHC_GRCh38_withIMGT.tar.gz https://zenodo.org/records/19336310/files/PRG_MHC_GRCh38_withIMGT.tar.gz?download=1 
     """
 }
-
-//unstable URL: http://www.well.ox.ac.uk/downloads/PRG_MHC_GRCh38_withIMGT.tar.gz
 
 process HLA_LA_REFERENCE_PREPARE {
     label 'HLALA_CONTAINER'

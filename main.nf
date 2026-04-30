@@ -29,7 +29,6 @@ workflow {
     if (params.build_references){
         log.info "Mode: Building References (IMGT v${params.imgt_version})"
         REFERENCES(
-                  //references_basedir,
                   params.references_basedir,
                   params.imgt_commit,
                   params.imgt_version,

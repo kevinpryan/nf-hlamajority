@@ -1,0 +1,7 @@
+cff-version: 1.2.0
+title: "nf-hlamajority"
+authors:
+  - family-names: Ryan
+    given-names: Kevin
+version: 1.0.0
+date-released: 2026-04-30
