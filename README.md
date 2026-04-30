@@ -2,6 +2,8 @@
 
 ![nf-hlamajority metro map](docs/images/arrows-bam-input-skip-trim-mosdepth-nf-hlamajority-with-subset-markdup.drawio.svg)
 
+[![DOI](https://zenodo.org/badge/987109779.svg)](https://doi.org/10.5281/zenodo.19925526)
+
 ## Background
 
 This pipeline implements a majority voting approach for predicting HLA Class I genotypes from DNA sequencing data. This approach was proposed by Claeys et al. 2023 based on their benchmarking study. `nf-hlamajority` takes paired-end DNA-sequencing data and runs four tools:
