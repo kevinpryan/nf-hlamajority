@@ -11,6 +11,7 @@ params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
 //params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
 params.trim = true
+params.ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna*"
 
 include { REFERENCES } from "./workflows/references"
 include { HLATYPING } from "./workflows/hlatyping"
@@ -117,7 +118,8 @@ workflow {
         params.save_merged,
         ch_fasta_cram,
         weights,
-        params.voting_method
+        params.voting_method,
+        params.ref_polysolver
     )
   }
 }

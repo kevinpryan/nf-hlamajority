@@ -3,6 +3,7 @@
 include { BWA_INDEX as BWA_INDEX_BWAKIT } from '../../modules/local/bwa_index'
 include { BWA_INDEX as BWA_INDEX_HLA_LA } from '../../modules/local/bwa_index'
 include { BWA_INDEX as BWA_INDEX_KOURAMI } from '../../modules/local/bwa_index'
+include { BWA_INDEX as BWA_INDEX_POLYSOLVER } from '../../modules/local/bwa_index'
 
 
 process GET_IMGT {
@@ -144,6 +145,20 @@ process HLA_LA_REFERENCE_PREPARE {
     """
 }
 
+process POLYSOLVER_REFERENCE_DOWNLOAD {
+    label 'HLALA_CONTAINER'
+    publishDir "${params.references_basedir}/polysolver", mode: 'copy'
+
+    output:
+    path("GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"), emit: reference
+
+    script:
+    """
+    wget -O "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz" ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+    gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz 
+    """
+}
+
 workflow REFERENCES {
     take:
     reference_dir
@@ -191,9 +206,9 @@ workflow REFERENCES {
     .set { ch_hla_la_tar }
 
     if (params.hla_la_prg_tar) {
-        hla_la_zip = file(params.hla_la_prg_tar) //HLA_LA_REFERENCE_FROM_LOCAL.out.reference_zip
+        hla_la_zip = file(params.hla_la_prg_tar) 
     } else {
-        log.warn "No --hla_la_prg_tar provided; attempting automated download (may fail)"
+        log.info "No --hla_la_prg_tar provided; performing automated download"
         HLA_LA_REFERENCE_DOWNLOAD()
         hla_la_zip = HLA_LA_REFERENCE_DOWNLOAD.out.reference_zip
     }
@@ -204,4 +219,12 @@ workflow REFERENCES {
                     HLA_LA_REFERENCE_PREPARE.out.extended_ref,
                     "hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome"
                     )
+    
+    POLYSOLVER_REFERENCE_DOWNLOAD()
+
+    BWA_INDEX_POLYSOLVER(
+                        POLYSOLVER_REFERENCE_DOWNLOAD.out.reference,
+                        "polysolver"
+                        )
+
 }

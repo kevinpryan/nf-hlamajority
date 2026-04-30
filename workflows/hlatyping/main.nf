@@ -25,7 +25,7 @@ workflow HLATYPING {
     fasta_cram
     weights
     voting_method
-
+    reference_polysolver
     main:
 
     ref = file(reference_dir, checkIfExists: true)
@@ -35,7 +35,7 @@ workflow HLATYPING {
     weights = file(weights, checkIfExists: true)
     mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
     method = params.voting_method
-
+    ref_polysolver = file(reference_polysolver, checkIfExists: true)
     if (trim == true) {
         FASTP (
         ch_fastq,
@@ -55,7 +55,7 @@ workflow HLATYPING {
         ref,
         fasta_cram
     )
-
+    
     MOSDEPTH(
         ALT_ALIGN.out,
         mosdepth_bed
@@ -68,13 +68,13 @@ workflow HLATYPING {
     OPTITYPE(
         ALT_ALIGN.out
     )
-
+    
     POLYSOLVER(
         ALT_ALIGN.out,
-        ref,
+        ref_polysolver,
         fasta_cram
     )
-
+    
     HLA_LA(
         ALT_ALIGN.out,
         graph
