@@ -10,8 +10,10 @@ process GET_IMGT {
     publishDir "${params.references_basedir}/source", mode: 'copy'
     
     label 'HLALA_CONTAINER'
+
     input:
     val imgt_commit
+
     output:
     path "IMGTHLA", emit: repo
     
@@ -31,6 +33,7 @@ process GET_KOURAMI {
     input:
     // 545c770
     val kourami_commit
+
     output:
     path "kourami", emit: repo
 
@@ -51,6 +54,7 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
 
     input:
     path kourami_repo
+    val expected_md5
 
     output:
     path("${kourami_repo}/resources/hs38NoAltDH.fa"), emit: reference
@@ -59,6 +63,13 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
     """
     cd ${kourami_repo}/scripts
     bash download_grch38.sh hs38NoAltDH
+
+    actual_md5=\$(md5sum ../resources/hs38NoAltDH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38NoAltDH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: hs38NoAltDH.fa (\$actual_md5)"
     """
 }
 
@@ -99,7 +110,10 @@ process BUILD_KOURAMI {
 
 process BUILD_BWAKIT {
     label 'bwa_mem_container'
-    publishDir "${params.references_basedir}/bwakit", mode: 'copy'
+    publishDir "${params.references_basedir}/bwakit", mode: 'copy' 
+
+    input:
+    val expected_md5
 
     output:
     path ("hs38DH.fa"), emit: reference
@@ -108,6 +122,13 @@ process BUILD_BWAKIT {
     script:
     """
     run-gen-ref hs38DH
+
+    actual_md5=\$(md5sum hs38DH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38DH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: hs38DH.fa (\$actual_md5)"
     """
 }
 
@@ -115,12 +136,22 @@ process BUILD_BWAKIT {
 process HLA_LA_REFERENCE_DOWNLOAD {
     label 'HLALA_CONTAINER'
 
+    input:
+    val expected_md5
+
     output:
     path("PRG_MHC_GRCh38_withIMGT.tar.gz"), emit: reference_zip
 
     script:
     """
     wget -O PRG_MHC_GRCh38_withIMGT.tar.gz https://zenodo.org/records/19336310/files/PRG_MHC_GRCh38_withIMGT.tar.gz?download=1 
+
+    actual_md5=\$(md5sum PRG_MHC_GRCh38_withIMGT.tar.gz | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: PRG_MHC_GRCh38_withIMGT.tar.gz md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: PRG_MHC_GRCh38_withIMGT.tar.gz (\$actual_md5)"
     """
 }
 
@@ -145,13 +176,23 @@ process POLYSOLVER_REFERENCE_DOWNLOAD {
     label 'HLALA_CONTAINER'
     publishDir "${params.references_basedir}/polysolver", mode: 'copy'
 
+    input:
+    val expected_md5
+
     output:
     path("GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"), emit: reference
 
     script:
     """
     wget -O "GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz" ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
-    gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz 
+    gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+
+    actual_md5=\$(md5sum GCA_000001405.15_GRCh38_no_alt_analysis_set.fna | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: polysolver reference md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: polysolver reference (\$actual_md5)"
     """
 }
 
@@ -161,6 +202,11 @@ workflow REFERENCES {
     imgt_commit
     imgt_version
     kourami_commit
+    hs38noaltdh_fa_md5
+    hs38dh_fa_md5
+    hla_la_tar_md5
+    hla_la_prg_tar_md5
+    polysolver_fna_md5
 
     main:
     
@@ -179,7 +225,8 @@ workflow REFERENCES {
                  )
 
     KOURAMI_DOWNLOAD_HS38NOALTDH(
-                                 GET_KOURAMI.out.repo
+                                 GET_KOURAMI.out.repo,
+                                 hs38noaltdh_fa_md5
                                 )
 
     BWA_INDEX_KOURAMI(
@@ -187,7 +234,7 @@ workflow REFERENCES {
                     "kourami/resources"
                      )
 
-    BUILD_BWAKIT()
+    BUILD_BWAKIT(hs38dh_fa_md5)
   
     BWA_INDEX_BWAKIT(
                      BUILD_BWAKIT.out.reference,
@@ -205,7 +252,7 @@ workflow REFERENCES {
         hla_la_zip = file(params.hla_la_prg_tar) 
     } else {
         log.info "No --hla_la_prg_tar provided; performing automated download"
-        HLA_LA_REFERENCE_DOWNLOAD()
+        HLA_LA_REFERENCE_DOWNLOAD(hla_la_tar_md5)
         hla_la_zip = HLA_LA_REFERENCE_DOWNLOAD.out.reference_zip
     }
 
@@ -216,7 +263,7 @@ workflow REFERENCES {
                     "hla-la/PRG_MHC_GRCh38_withIMGT/extendedReferenceGenome"
                     )
     
-    POLYSOLVER_REFERENCE_DOWNLOAD()
+    POLYSOLVER_REFERENCE_DOWNLOAD(polysolver_fna_md5)
 
     BWA_INDEX_POLYSOLVER(
                         POLYSOLVER_REFERENCE_DOWNLOAD.out.reference,

@@ -9,9 +9,70 @@ params.reference_dir = "${params.references_basedir}/bwakit/hs38DH*"
 params.hla_la_graph = "${params.references_basedir}/hla-la"
 params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
-//params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
 params.trim = true
 params.ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna*"
+params.novoalign = "${projectDir}/bin/novoalign"
+params.novolicense = null
+
+params.hs38noaltdh_fa_md5 = null
+params.hs38dh_fa_md5      = null
+params.polysolver_fna_md5 = null
+params.hla_la_tar_md5 = null
+//params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
+params.hla_la_prg_tar_md5 = null
+
+// Eenforcement of novoalign placement
+def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
+def provided_novoalign = file(params.novoalign).toString()
+
+if (expected_novoalign != provided_novoalign) {
+    exit 1, """
+ERROR: Novoalign binary must be located exactly at:
+    ${expected_novoalign}
+
+You provided:
+    ${provided_novoalign}
+"""
+}
+
+if (!file(expected_novoalign).exists()) {
+    exit 1, "ERROR: Novoalign binary not found at: ${expected_novoalign}"
+}
+
+// Enforcement of the optional novoalign license location
+if (params.novolicense) {
+
+    def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
+    def provided_license = file(params.novolicense).toString()
+
+    if (expected_license != provided_license) {
+        exit 1, """
+ERROR: Novoalign license must be located exactly at:
+    ${expected_license}
+
+You provided:
+    ${provided_license}
+"""
+    }
+
+    if (!file(expected_license).exists()) {
+        exit 1, "ERROR: Novoalign license not found at: ${expected_license}"
+    }
+}
+
+log.info """
+Novoalign license (optional for novoalign binaries v3 or less but required for v4+):
+    If provided, it must be located at exactly:
+        ${projectDir}/bin/novoalign.lic
+
+Example usage:
+    --novolicense ${projectDir}/bin/novoalign.lic
+
+The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
+        ${projectDir}/bin/novoalign
+
+No other paths are accepted.
+"""
 
 include { REFERENCES } from "./workflows/references"
 include { HLATYPING } from "./workflows/hlatyping"
@@ -28,20 +89,46 @@ workflow {
     
     if (params.build_references){
         log.info "Mode: Building References (IMGT v${params.imgt_version})"
+        
+        def missing_md5 = []
+
+         if (!params.hs38noaltdh_fa_md5) missing_md5 << '--hs38noaltdh_fa_md5'
+         if (!params.hs38dh_fa_md5)      missing_md5 << '--hs38dh_fa_md5'
+         if (!params.polysolver_fna_md5) missing_md5 << '--polysolver_fna_md5'
+ 
+         // Only required when auto-downloading HLA-LA tarball
+         if (!params.hla_la_prg_tar && !params.hla_la_tar_md5)
+             missing_md5 << '--hla_la_tar_md5'
+ 
+         if (missing_md5) {
+             exit 1, "Missing required MD5 parameters: ${missing_md5.join(', ')}"
+         }
+ 
+         // Optional soft warning for custom tarball
+         if (params.hla_la_prg_tar && !params.hla_la_prg_tar_md5) {
+             log.warn "No --hla_la_prg_tar_md5 provided; skipping integrity check on custom tarball."
+         }
         REFERENCES(
                   params.references_basedir,
                   params.imgt_commit,
                   params.imgt_version,
-                  params.kourami_commit
-                  )
+                  params.kourami_commit,
+                  params.hs38noaltdh_fa_md5,
+                  params.hs38dh_fa_md5,
+                  params.hla_la_tar_md5,
+                  params.hla_la_prg_tar_md5,
+                  params.polysolver_fna_md5
+              )
     } else {
         log.info "Mode: Running nf-hlamajority"
         ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+        
         reference_dir = params.reference_dir
         hla_la_graph = params.hla_la_graph
         kourami_database = params.kourami_database
         kourami_ref = params.kourami_ref
         weights = params.weights
+
     if (params.aligned) {
         println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
@@ -123,6 +210,12 @@ workflow {
         }
 
     }
+
+   ch_novoalign    = Channel.value(file(params.novoalign))
+   ch_novolicense = params.novolicense \
+    ? Channel.value(file(params.novolicense)) \
+    : Channel.value([])
+
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
 
     HLATYPING(
@@ -138,7 +231,9 @@ workflow {
         ch_fasta_cram,
         weights,
         params.voting_method,
-        params.ref_polysolver
+        params.ref_polysolver,
+        ch_novoalign,
+        ch_novolicense
     )
   }
 }

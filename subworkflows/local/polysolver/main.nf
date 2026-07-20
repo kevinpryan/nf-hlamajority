@@ -17,6 +17,8 @@ workflow POLYSOLVER{
     subsetbam
     reference
     fasta_cram
+    ch_novoalign
+    ch_novolicense
 
     main:
     BAM_TO_FASTQ(
@@ -34,7 +36,9 @@ workflow POLYSOLVER{
         )
 
     RUN_POLYSOLVER(
-        SAMTOOLS_SORT_INDEX.out.sortedAln
+        SAMTOOLS_SORT_INDEX.out.sortedAln,
+        ch_novoalign,
+        ch_novolicense
     )
 
     // Expected samples: keep only key
