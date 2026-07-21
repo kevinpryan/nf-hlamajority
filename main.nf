@@ -20,58 +20,36 @@ params.hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
 params.polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
 params.hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
 
-// Eenforcement of novoalign placement
+// Enforcement of novoalign placement
 def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
-def provided_novoalign = file(params.novoalign).toString()
-
-if (expected_novoalign != provided_novoalign) {
-    exit 1, """
-ERROR: Novoalign binary must be located exactly at:
-    ${expected_novoalign}
-
-You provided:
-    ${provided_novoalign}
-"""
-}
 
 if (!file(expected_novoalign).exists()) {
-    exit 1, "ERROR: Novoalign binary not found at: ${expected_novoalign}"
-}
-
-// Enforcement of the optional novoalign license location
-if (params.novolicense) {
-
-    def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
-    def provided_license = file(params.novolicense).toString()
-
-    if (expected_license != provided_license) {
-        exit 1, """
-ERROR: Novoalign license must be located exactly at:
-    ${expected_license}
-
-You provided:
-    ${provided_license}
-"""
-    }
-
-    if (!file(expected_license).exists()) {
-        exit 1, "ERROR: Novoalign license not found at: ${expected_license}"
-    }
-}
-
-log.info """
-Novoalign license (optional for novoalign binaries v3 or less but required for v4+):
-    If provided, it must be located at exactly:
-        ${projectDir}/bin/novoalign.lic
-
-Example usage:
-    --novolicense ${projectDir}/bin/novoalign.lic
-
-The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
+     log.warn """
+     Novoalign binary not found, skipping Polysolver. 
+     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
         ${projectDir}/bin/novoalign
 
-No other paths are accepted.
+     No other paths are accepted.
 """
+     params.skip_polysolver = true
+} else {
+     params.skip_polysolver = false
+}
+
+def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
+
+if (file(expected_novoalign).exists() && !file(expected_license).exists()) {
+     log.info """ 
+     Novoalign binary found but no Novoalign license provided (optional for novoalign binaries v3 or less but required for v4+):
+     If provided, it must be located at exactly:
+        ${projectDir}/bin/novoalign.lic
+
+     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at: 
+        ${projectDir}/bin/novoalign
+
+     No other paths are accepted.
+"""
+}
 
 include { REFERENCES } from "./workflows/references"
 include { HLATYPING } from "./workflows/hlatyping"
@@ -209,11 +187,6 @@ workflow {
 
     }
 
-   ch_novoalign    = Channel.value(file(params.novoalign))
-   ch_novolicense = params.novolicense \
-    ? Channel.value(file(params.novolicense)) \
-    : Channel.value([])
-
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
 
     HLATYPING(
@@ -230,8 +203,7 @@ workflow {
         weights,
         params.voting_method,
         params.ref_polysolver,
-        ch_novoalign,
-        ch_novolicense
+        params.skip_polysolver
     )
   }
 }

@@ -4,13 +4,10 @@ process RUN_POLYSOLVER {
 
     input:
     tuple val(meta), path(bam), path(idx)
-    path novoalign
-    path novolicense
 
     output:
     tuple val(meta), path("polysolver_calls"), emit: polysolver_call
     tuple val(meta), path("counts*"), optional: true
-    path("check.status.out.txt"), optional: true
     tuple val(meta), path("${meta.sample}.polysolver.STATUS.txt"), emit: run_status
 
     when:
@@ -18,15 +15,6 @@ process RUN_POLYSOLVER {
 
     script:
     """
-    export NOVOALIGN_DIR=\$PWD
-    chmod +x novoalign
-
-    if [[ -n "${novolicense}" && -s "${novolicense}" ]]; then
-        echo "Using Novoalign license ${novolicense}"
-    else
-        echo "No Novoalign license provided"
-    fi
-
     mkdir -p polysolver_calls
     mkdir -p tempdir
 
@@ -67,3 +55,27 @@ process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
     echo "${meta.sample}\tPolysolver\tSKIPPED_SINGLE_END" > "${meta.sample}.polysolver.STATUS.txt"
     """
 }
+
+process RUN_POLYSOLVER_PLACEHOLDER_MISSING_NOVOALIGN {
+    tag "$meta.sample"
+
+    publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
+
+    input:
+    tuple val(meta), path(bam), path(idx)
+
+    output:
+    tuple val(meta), path("polysolver_calls"), emit: polysolver_call
+    tuple val(meta), path("${meta.sample}.polysolver.STATUS.txt"), emit: run_status
+
+    script:
+    """
+    mkdir -p polysolver_calls
+    printf "HLA-A\\tNA\\tNA\\n" > polysolver_calls/winners.hla.nofreq.txt
+    printf "HLA-B\\tNA\\tNA\\n" >> polysolver_calls/winners.hla.nofreq.txt
+    printf "HLA-C\\tNA\\tNA\\n" >> polysolver_calls/winners.hla.nofreq.txt
+
+    echo "${meta.sample}\tPolysolver\tSKIPPED_MISSING_NOVOALIGN" > "${meta.sample}.polysolver.STATUS.txt"
+    """
+}
+

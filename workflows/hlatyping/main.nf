@@ -2,6 +2,7 @@
 include { ALT_ALIGN } from "../../subworkflows/local/alt_align"
 include { OPTITYPE } from "../../subworkflows/local/optitype"
 include { POLYSOLVER } from "../../subworkflows/local/polysolver"
+include { POLYSOLVER_PLACEHOLDER } from "../../subworkflows/local/polysolver"
 include { HLA_LA } from "../../subworkflows/local/hlala"
 include { KOURAMI } from "../../subworkflows/local/kourami"
 include { FASTP } from "../../modules/nf-core/fastp"
@@ -25,8 +26,7 @@ workflow HLATYPING {
     weights
     voting_method
     reference_polysolver
-    ch_novoalign
-    ch_novolicense
+    skip_polysolver
     main:
 
     ref = file(reference_dir, checkIfExists: true)
@@ -69,14 +69,21 @@ workflow HLATYPING {
     OPTITYPE(
         ALT_ALIGN.out
     )
-    
+    if (skip_polysolver == false) {
     POLYSOLVER(
         ALT_ALIGN.out,
         ref_polysolver,
-        fasta_cram,
-        ch_novoalign,
-        ch_novolicense
+        fasta_cram
     )
+        POLYSOLVER_CALLS = POLYSOLVER.out.calls
+        POLYSOLVER_STATUS = POLYSOLVER.out.status
+    } else {
+        POLYSOLVER_PLACEHOLDER(
+            ALT_ALIGN.out
+        )
+        POLYSOLVER_STATUS = POLYSOLVER_PLACEHOLDER.out.status
+        POLYSOLVER_CALLS = POLYSOLVER_PLACEHOLDER.out.calls
+    }
     
     HLA_LA(
         ALT_ALIGN.out,
@@ -91,7 +98,7 @@ workflow HLATYPING {
 
     status = OPTITYPE.out.status
              .mix(HLA_LA.out.status)
-             .mix(POLYSOLVER.out.status)
+             .mix(POLYSOLVER_STATUS)
              .mix(KOURAMI.out.status)
 
     status
@@ -102,7 +109,7 @@ workflow HLATYPING {
         )  { it[1] }
         .set{ status_ch }
 
-    OPTITYPE.out.calls.mix(KOURAMI.out.calls, POLYSOLVER.out.calls, HLA_LA.out.hlala_call)
+    OPTITYPE.out.calls.mix(KOURAMI.out.calls, POLYSOLVER_CALLS, HLA_LA.out.hlala_call)
                 .groupTuple(by: 0, size: 4)
                 .set{ ch_hlatyping_outputs }
 
