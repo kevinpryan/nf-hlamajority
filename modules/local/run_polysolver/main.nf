@@ -11,7 +11,6 @@ process RUN_POLYSOLVER {
     tuple val(meta), path("polysolver_calls"), emit: polysolver_call
     tuple val(meta), path("counts*"), optional: true
     path("check.status.out.txt"), optional: true
-    //path("${meta.sample}.polysolver_status.tsv"), emit: run_status
     tuple val(meta), path("${meta.sample}.polysolver.STATUS.txt"), emit: run_status
 
     when:
@@ -33,7 +32,7 @@ process RUN_POLYSOLVER {
 
     if /home/polysolver/scripts/shell_call_hla_type ${bam} Unknown 0 hg38 FASTQ 0 ./tempdir; then
         mv tempdir/winners.hla.nofreq.txt polysolver_calls/
-        printf "${meta.sample}\\tPASS\\n" > ${meta.sample}.polysolver_status.tsv
+        printf "${meta.sample}\\tPolysolver\\tSUCCESS\\n" > "${meta.sample}.polysolver.STATUS.txt"
 
     else
         printf "HLA-A\\tNA\\tNA\\n" > polysolver_calls/winners.hla.nofreq.txt
