@@ -18,6 +18,7 @@ params.hs38noaltdh_fa_md5 = null
 params.hs38dh_fa_md5      = null
 params.polysolver_fna_md5 = null
 params.hla_la_tar_md5 = null
+params.hla_la_prg_tar = null
 //params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
 params.hla_la_prg_tar_md5 = null
 
