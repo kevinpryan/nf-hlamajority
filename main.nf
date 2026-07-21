@@ -14,12 +14,11 @@ params.ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.1
 params.novoalign = "${projectDir}/bin/novoalign"
 params.novolicense = null
 
-params.hs38noaltdh_fa_md5 = null
-params.hs38dh_fa_md5      = null
-params.polysolver_fna_md5 = null
-params.hla_la_tar_md5 = null
-//params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
-params.hla_la_prg_tar_md5 = null
+params.hla_la_prg_tar = null
+params.hs38noaltdh_fa_md5 = "ba0254bd40d04e25891b0f11b0da5d0c"
+params.hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
+params.polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
+params.hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
 
 // Eenforcement of novoalign placement
 def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
@@ -105,8 +104,8 @@ workflow {
          }
  
          // Optional soft warning for custom tarball
-         if (params.hla_la_prg_tar && !params.hla_la_prg_tar_md5) {
-             log.warn "No --hla_la_prg_tar_md5 provided; skipping integrity check on custom tarball."
+         if (params.hla_la_prg_tar && !params.hla_la_tar_md5) {
+             log.warn "No --hla_la_tar_md5 provided; skipping integrity check on custom tarball."
          }
         REFERENCES(
                   params.references_basedir,
@@ -116,7 +115,6 @@ workflow {
                   params.hs38noaltdh_fa_md5,
                   params.hs38dh_fa_md5,
                   params.hla_la_tar_md5,
-                  params.hla_la_prg_tar_md5,
                   params.polysolver_fna_md5
               )
     } else {
