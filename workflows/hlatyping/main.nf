@@ -69,6 +69,7 @@ workflow HLATYPING {
     OPTITYPE(
         ALT_ALIGN.out
     )
+    // skip polysolver for all samples if novoalign binary is not provided
     if (skip_polysolver == false) {
     POLYSOLVER(
         ALT_ALIGN.out,

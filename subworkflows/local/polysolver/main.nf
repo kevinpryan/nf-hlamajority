@@ -20,14 +20,30 @@ workflow POLYSOLVER{
     fasta_cram
 
     main:
+
+    // branch subsetbam here to give single and paired-end
+    subsetbam
+        .branch { meta, bam, index ->
+               single: meta.single_end == true
+               paired: meta.single_end == false
+             }
+        .set{ subsetbam_branched }
+
+    // run placeholder process outputting Polysolver outputs (NA) and status file
+    RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END(
+        subsetbam_branched.single
+    )
+
+    // proceed with Polysolver on paired-end samples
+
     BAM_TO_FASTQ(
-        subsetbam
+        subsetbam_branched.paired
     )
 
     BWA_REALIGN(
         BAM_TO_FASTQ.out.convertedfastqs,
         reference
-        ) 
+        )
 
     SAMTOOLS_SORT_INDEX(
         BWA_REALIGN.out.realignbam,
@@ -37,41 +53,6 @@ workflow POLYSOLVER{
     RUN_POLYSOLVER(
         SAMTOOLS_SORT_INDEX.out.sortedAln
     )
-
-    // Expected samples: keep only key
-    SAMTOOLS_SORT_INDEX.out.sortedAln
-        .map { meta, bam, index ->
-            [meta.sample, meta]
-        }
-        .set { expected_samples }
-
-
-    // Successful Polysolver outputs
-    RUN_POLYSOLVER.out.polysolver_call
-        .map { meta, result ->
-            [meta.sample, result]
-        }
-        .set { successful_polysolver }
-
-
-    // Find missing samples
-    expected_samples
-        .join(successful_polysolver, remainder:true)
-        .filter { sample, meta, result ->
-            result == null
-        }
-        .map { sample, meta, result ->
-            meta
-        }
-        .branch {
-            paired: it.single_end == false
-            single: it.single_end == true
-        }
-        .set { failed_polysolver }
-     
-     RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END(
-        failed_polysolver.single
-     )
 
     emit:
     calls = RUN_POLYSOLVER.out.polysolver_call

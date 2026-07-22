@@ -39,7 +39,8 @@ process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
     publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
 
     input:
-    val meta
+    //val meta
+    tuple val(meta), path(bam), path(idx)
 
     output:
     tuple val(meta), path("polysolver_calls"), emit: polysolver_call
