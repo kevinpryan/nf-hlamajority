@@ -18,7 +18,7 @@ process RUN_POLYSOLVER {
     mkdir -p polysolver_calls
     mkdir -p tempdir
 
-    if /home/polysolver/scripts/shell_call_hla_type ${bam} Unknown 0 hg38 FASTQ 0 ./tempdir; then
+    if /home/polysolver/scripts/shell_call_hla_type ${bam} Unknown 0 hg38 STDFQ 0 ./tempdir; then
         mv tempdir/winners.hla.nofreq.txt polysolver_calls/
         printf "${meta.sample}\\tPolysolver\\tSUCCESS\\n" > "${meta.sample}.polysolver.STATUS.txt"
 
