@@ -205,7 +205,6 @@ workflow REFERENCES {
     hs38noaltdh_fa_md5
     hs38dh_fa_md5
     hla_la_tar_md5
-    hla_la_prg_tar_md5
     polysolver_fna_md5
 
     main:
