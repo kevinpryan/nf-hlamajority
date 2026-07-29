@@ -12,6 +12,7 @@ process RUN_OPTITYPE {
 
     output:
     tuple val(meta), path("optitype_calls"), emit: optitype_call 
+    tuple val(meta), path("${meta.sample}.optitype.STATUS.txt"), emit: run_status
 
     script:
     """
@@ -29,5 +30,6 @@ process RUN_OPTITYPE {
     cp -r "${meta.sample}"/*.tsv optitype_calls/
     cp -r "${meta.sample}"/*.pdf optitype_calls/    
     rm *.fq
+    echo "${meta.sample}\tOptitype\tSUCCESS" > "${meta.sample}.optitype.STATUS.txt"
     """
 }

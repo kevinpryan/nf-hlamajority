@@ -9,9 +9,47 @@ params.reference_dir = "${params.references_basedir}/bwakit/hs38DH*"
 params.hla_la_graph = "${params.references_basedir}/hla-la"
 params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
 params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
-//params.hla_la_prg_tar = 'PRG_MHC_GRCh38_withIMGT.tar.gz'
 params.trim = true
 params.ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna*"
+params.novoalign = "${projectDir}/bin/novoalign"
+params.novolicense = null
+
+params.hla_la_prg_tar = null
+params.hs38noaltdh_fa_md5 = "ba0254bd40d04e25891b0f11b0da5d0c"
+params.hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
+params.polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
+params.hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
+
+// Enforcement of novoalign placement
+def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
+
+if (!file(expected_novoalign).exists()) {
+     log.warn """
+     Novoalign binary not found, skipping Polysolver. 
+     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
+        ${projectDir}/bin/novoalign
+
+     No other paths are accepted.
+"""
+     params.skip_polysolver = true
+} else {
+     params.skip_polysolver = false
+}
+
+def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
+
+if (file(expected_novoalign).exists() && !file(expected_license).exists()) {
+     log.info """ 
+     Novoalign binary found but no Novoalign license provided (optional for novoalign binaries v3 or less but required for v4+):
+     If provided, it must be located at exactly:
+        ${projectDir}/bin/novoalign.lic
+
+     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at: 
+        ${projectDir}/bin/novoalign
+
+     No other paths are accepted.
+"""
+}
 
 include { REFERENCES } from "./workflows/references"
 include { HLATYPING } from "./workflows/hlatyping"
@@ -28,20 +66,45 @@ workflow {
     
     if (params.build_references){
         log.info "Mode: Building References (IMGT v${params.imgt_version})"
+        
+        def missing_md5 = []
+
+         if (!params.hs38noaltdh_fa_md5) missing_md5 << '--hs38noaltdh_fa_md5'
+         if (!params.hs38dh_fa_md5)      missing_md5 << '--hs38dh_fa_md5'
+         if (!params.polysolver_fna_md5) missing_md5 << '--polysolver_fna_md5'
+ 
+         // Only required when auto-downloading HLA-LA tarball
+         if (!params.hla_la_prg_tar && !params.hla_la_tar_md5)
+             missing_md5 << '--hla_la_tar_md5'
+ 
+         if (missing_md5) {
+             exit 1, "Missing required MD5 parameters: ${missing_md5.join(', ')}"
+         }
+ 
+         // Optional soft warning for custom tarball
+         if (params.hla_la_prg_tar && !params.hla_la_tar_md5) {
+             log.warn "No --hla_la_tar_md5 provided; skipping integrity check on custom tarball."
+         }
         REFERENCES(
                   params.references_basedir,
                   params.imgt_commit,
                   params.imgt_version,
-                  params.kourami_commit
-                  )
+                  params.kourami_commit,
+                  params.hs38noaltdh_fa_md5,
+                  params.hs38dh_fa_md5,
+                  params.hla_la_tar_md5,
+                  params.polysolver_fna_md5
+              )
     } else {
         log.info "Mode: Running nf-hlamajority"
         ch_fasta_cram = params.cram_fasta ? Channel.value(file(params.cram_fasta)) : Channel.value([])
+        
         reference_dir = params.reference_dir
         hla_la_graph = params.hla_la_graph
         kourami_database = params.kourami_database
         kourami_ref = params.kourami_ref
         weights = params.weights
+
     if (params.aligned) {
         println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
@@ -102,7 +165,28 @@ workflow {
     }
     | set { ch_fastq }
     trim = params.trim
+
+    // issue message if single-end data is provided
+    ch_fastq
+        .filter { meta, reads -> meta.single_end }
+        .map { meta, reads -> meta.sample }
+        .collect()
+        .map { samples ->
+
+            if (samples.size() > 0) {
+                log.warn """
+                Single-end data detected.
+
+                ${samples.size()} sample(s) will only be processed by OptiType.
+                Other HLA typing tools require paired-end reads.
+                """
+            }
+
+            samples
+        }
+
     }
+
 // example ch_fastq: [[sample:3532, seq_type:dna], [/data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.1.fq.gz, /data4/kryan/misc/useful/nextflow/nf-hlatyping/testdir/gen_testdata/3532_subset_10000.2.fq.gz]]
 
     HLATYPING(
@@ -118,7 +202,8 @@ workflow {
         ch_fasta_cram,
         weights,
         params.voting_method,
-        params.ref_polysolver
+        params.ref_polysolver,
+        params.skip_polysolver
     )
   }
 }

@@ -1,8 +1,8 @@
-#!/usr/bin/env nextflow
 
 include { ALT_ALIGN } from "../../subworkflows/local/alt_align"
 include { OPTITYPE } from "../../subworkflows/local/optitype"
 include { POLYSOLVER } from "../../subworkflows/local/polysolver"
+include { POLYSOLVER_PLACEHOLDER } from "../../subworkflows/local/polysolver"
 include { HLA_LA } from "../../subworkflows/local/hlala"
 include { KOURAMI } from "../../subworkflows/local/kourami"
 include { FASTP } from "../../modules/nf-core/fastp"
@@ -26,6 +26,7 @@ workflow HLATYPING {
     weights
     voting_method
     reference_polysolver
+    skip_polysolver
     main:
 
     ref = file(reference_dir, checkIfExists: true)
@@ -68,12 +69,22 @@ workflow HLATYPING {
     OPTITYPE(
         ALT_ALIGN.out
     )
-    
+    // skip polysolver for all samples if novoalign binary is not provided
+    if (skip_polysolver == false) {
     POLYSOLVER(
         ALT_ALIGN.out,
         ref_polysolver,
         fasta_cram
     )
+        POLYSOLVER_CALLS = POLYSOLVER.out.calls
+        POLYSOLVER_STATUS = POLYSOLVER.out.status
+    } else {
+        POLYSOLVER_PLACEHOLDER(
+            ALT_ALIGN.out
+        )
+        POLYSOLVER_STATUS = POLYSOLVER_PLACEHOLDER.out.status
+        POLYSOLVER_CALLS = POLYSOLVER_PLACEHOLDER.out.calls
+    }
     
     HLA_LA(
         ALT_ALIGN.out,
@@ -86,7 +97,20 @@ workflow HLATYPING {
         ref_kourami
     )
 
-    OPTITYPE.out.mix(KOURAMI.out, POLYSOLVER.out.calls, HLA_LA.out)
+    status = OPTITYPE.out.status
+             .mix(HLA_LA.out.status)
+             .mix(POLYSOLVER_STATUS)
+             .mix(KOURAMI.out.status)
+
+    status
+        .collectFile(
+            name: 'nf_hlamajority_status.tsv',
+            seed: "sample\ttool\tstatus\n",
+            sort: { it[0] }
+        )  { it[1] }
+        .set{ status_ch }
+
+    OPTITYPE.out.calls.mix(KOURAMI.out.calls, POLYSOLVER_CALLS, HLA_LA.out.hlala_call)
                 .groupTuple(by: 0, size: 4)
                 .set{ ch_hlatyping_outputs }
 
@@ -119,7 +143,7 @@ workflow HLATYPING {
     MEAN_COVERAGE.out.mean_depth.collectFile(name: 'nf_hlamajority_depth.tsv', keepHeader: true, skip: 1,  sort: { it[0] }) { it[1] }
                                 .set{ mosdepth_combined_ch }
 
-    mixed_ch = votes_ch.mix(votes_stats_ch, all_calls_ch, mosdepth_combined_ch)
+    mixed_ch = votes_ch.mix(votes_stats_ch, all_calls_ch, mosdepth_combined_ch, status_ch)
 
     SORT_RESULTS(mixed_ch)
 }

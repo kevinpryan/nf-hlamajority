@@ -149,7 +149,7 @@ raft.py run-ots --project-id install-refs \
 
 ### Step 5
 
-Download *nf-hlamajority* from GitHub
+Download *nf-hlamajority* from GitHub. Note: LENS-hlamajority was developed using nf-hlamajority commit f00ec51. However, as the standalone pipeline is only used to build references, the latest release can be used for this purpose.
 
 ```
 git clone https://github.com/kevinpryan/nf-hlamajority.git
@@ -375,7 +375,7 @@ Your `.nextflow.log`, along with all Nextflow trace files, is found in your proj
 
 ## AWS Batch Compute Environments
 
-LENS-hlamajority is executed on AWS Batch using ECS-backed managed compute environments. No custom AMIs are required. All compute environments are based on the ECS‑Optimized Amazon Linux 2 AMI provided by AWS for the target region.
+LENS-hlamajority is executed on AWS Batch using ECS-backed managed compute environments. No custom AMIs are required. All compute environments are based on the ECS‑Optimised Amazon Linux 2 AMI provided by AWS for the target region.
 
 ### Queues
 Two AWS Batch queues are used:

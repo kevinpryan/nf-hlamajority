@@ -17,6 +17,7 @@ workflow OPTITYPE {
     )
 
     emit:
-    RUN_OPTITYPE.out.optitype_call
+    calls = RUN_OPTITYPE.out.optitype_call
+    status = RUN_OPTITYPE.out.run_status 
 }
 

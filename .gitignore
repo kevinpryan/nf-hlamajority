@@ -16,3 +16,6 @@ test-dataset.csv
 test-majority
 test-weighted
 .nextflow*
+bin/novoalign
+bin/novoalign.lic
+lugh.config
