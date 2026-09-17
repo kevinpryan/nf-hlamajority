@@ -1,5 +1,12 @@
 #!/usr/bin/env nextflow
 
+include { REFERENCES } from "./workflows/references"
+include { HLATYPING } from "./workflows/hlatyping"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_INDEX } from "./modules/local/samtools_sort_index"
+include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modules/local/samtools_sort_index"
+include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
+include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
+
 params.imgt_version = "3.63.0"
 params.imgt_commit  = "8382fbe"
 params.build_references = false
@@ -20,45 +27,39 @@ params.hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
 params.polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
 params.hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
 
-// Enforcement of novoalign placement
-def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
-
-if (!file(expected_novoalign).exists()) {
-     log.warn """
-     Novoalign binary not found, skipping Polysolver. 
-     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
-        ${projectDir}/bin/novoalign
-
-     No other paths are accepted.
-"""
-     params.skip_polysolver = true
-} else {
-     params.skip_polysolver = false
-}
-
-def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
-
-if (file(expected_novoalign).exists() && !file(expected_license).exists()) {
-     log.info """ 
-     Novoalign binary found but no Novoalign license provided (optional for novoalign binaries v3 or less but required for v4+):
-     If provided, it must be located at exactly:
-        ${projectDir}/bin/novoalign.lic
-
-     The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at: 
-        ${projectDir}/bin/novoalign
-
-     No other paths are accepted.
-"""
-}
-
-include { REFERENCES } from "./workflows/references"
-include { HLATYPING } from "./workflows/hlatyping"
-include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_INDEX } from "./modules/local/samtools_sort_index"
-include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modules/local/samtools_sort_index"
-include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
-include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
-
 workflow {
+
+    // Enforcement of novoalign placement
+    def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
+
+    if (!file(expected_novoalign).exists()) {
+        log.warn """
+        Novoalign binary not found, skipping Polysolver.
+        The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
+           ${projectDir}/bin/novoalign
+
+        No other paths are accepted.
+        """
+        params.skip_polysolver = true
+    } else {
+        params.skip_polysolver = false
+    }
+
+    def expected_license = file("${projectDir}/bin/novoalign.lic").toString()
+
+    if (file(expected_novoalign).exists() && !file(expected_license).exists()) {
+        log.info """
+        Novoalign binary found but no Novoalign license provided (optional for novoalign binaries v3 or less but required for v4+):
+        If provided, it must be located at exactly:
+           ${projectDir}/bin/novoalign.lic
+
+        The Novoalign binary must be downloaded from www.novocraft.com by the user and should be located at:
+           ${projectDir}/bin/novoalign
+
+        No other paths are accepted.
+        """
+    }
+   
     if (!params.outdir) {
         exit 1, "Pipeline parameter '--outdir' is mandatory. Please provide a path for the output directory."
     }
@@ -108,7 +109,8 @@ workflow {
     if (params.aligned) {
         println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
-        Channel.fromPath(params.samplesheet, checkIfExists: true)
+        //channel.of(file(params.samplesheet), checkIfExists: true)
+        channel.fromPath(params.samplesheet, checkIfExists: true)
         | splitCsv(header: true)
         | map { row ->
             def meta = row.subMap(['sample'])
@@ -144,7 +146,8 @@ workflow {
         trim = false
     } else {
     println "fastq input..."
-    Channel.fromPath(params.samplesheet, checkIfExists: true)
+    //channel.of(file(params.samplesheet), checkIfExists: true)
+    channel.fromPath(params.samplesheet, checkIfExists: true)
     | splitCsv( header:true, strip:true )
     | flatMap { row ->
         if (!row.sample || !row.fastq_1) {

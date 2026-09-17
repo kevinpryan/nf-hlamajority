@@ -10,19 +10,19 @@ include { RUN_KOURAMI_PLACEHOLDER_SE } from '../../../modules/local/run_kourami/
 workflow KOURAMI {
     
     take: 
-    bam
+    bam_ch
     kourami_panel
     kourami_reference
 
     main:
     RUN_KOURAMI_ALIGN_EXTRACT(
-        bam,
+        bam_ch,
         kourami_panel,
         kourami_reference
     )
     
     // Expected samples: keep only key
-    bam
+    bam_ch
         .map { meta, bam, index ->
             [meta.sample, meta]
         }
@@ -91,44 +91,7 @@ workflow KOURAMI {
 
     RUN_KOURAMI_PLACEHOLDER( failed_kourami_jar )
 
-    /*
-    RUN_KOURAMI_JAR(
-        RUN_KOURAMI_ALIGN_EXTRACT.out.kourami_alignment,
-        kourami_panel
-    )
-
-    bam
-        // Create a key-only channel from input [meta]
-        .map { meta, bam, bai -> [ meta ] } // wrap in list to make it a tuple key
-        // Join with output. If output is missing (timeout), result is null.
-        .join(RUN_KOURAMI_JAR.out.kourami_result, remainder: true)
-        
-        // Split into Success vs Failure
-        //.branch { meta, result ->
-        //    success: result != null
-        //        return [meta, result] // Return the [meta, path] tuple
-        //    failure: result == null
-        //        return meta   // Return just [meta] for the placeholder
-        //}
-        .branch { item ->
-        def meta = item[0]
-        def results = item.size() > 1 ? item[1] : null
-
-        success: results != null
-            return [meta, results]
-
-        failure: results == null
-            return meta
-        }
-        .set { ch_kourami_routing }
-
-    // Run Placeholder for Timed Out samples
-    RUN_KOURAMI_PLACEHOLDER(
-        ch_kourami_routing.failure
-    )
-    */
     emit:
-    //calls = ch_kourami_routing.success.mix(RUN_KOURAMI_PLACEHOLDER.out.kourami_result)
     calls = RUN_KOURAMI_JAR.out.kourami_result.mix(RUN_KOURAMI_PLACEHOLDER.out.kourami_result)
                                               .mix(RUN_KOURAMI_PLACEHOLDER_SE.out.kourami_result)
     status = RUN_KOURAMI_JAR.out.run_status

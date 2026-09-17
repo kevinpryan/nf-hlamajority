@@ -29,14 +29,14 @@ workflow HLATYPING {
     skip_polysolver
     main:
 
-    ref = file(reference_dir, checkIfExists: true)
+    ref = files(reference_dir, checkIfExists: true)
     graph = file(hla_la_graph, checkIfExists: true)
-    ref_kourami = file(kourami_ref, checkIfExists: true)
+    ref_kourami = files(kourami_ref, checkIfExists: true)
     db_kourami = file(kourami_database, checkIfExists: true)
     weights = file(weights, checkIfExists: true)
     mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
     method = params.voting_method
-    ref_polysolver = file(reference_polysolver, checkIfExists: true)
+    ref_polysolver = files(reference_polysolver, checkIfExists: true)
     if (trim == true) {
         FASTP (
         ch_fastq,

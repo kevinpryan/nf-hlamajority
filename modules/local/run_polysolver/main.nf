@@ -1,6 +1,8 @@
 process RUN_POLYSOLVER {
     tag "$meta.sample"
-    publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
+    publishDir "${params.outdir}/polysolver_calls",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     tuple val(meta), path(bam), path(idx)
@@ -36,10 +38,13 @@ process RUN_POLYSOLVER {
 process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
     tag "$meta.sample"
 
-    publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
+    //publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
+    publishDir "${params.outdir}/polysolver_calls",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
+
 
     input:
-    //val meta
     tuple val(meta), path(bam), path(idx)
 
     output:
@@ -59,8 +64,9 @@ process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
 
 process RUN_POLYSOLVER_PLACEHOLDER_MISSING_NOVOALIGN {
     tag "$meta.sample"
-
-    publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
+    publishDir "${params.outdir}/polysolver_calls",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     tuple val(meta), path(bam), path(idx)
