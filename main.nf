@@ -7,25 +7,36 @@ include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modul
 include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
 
-params.imgt_version = "3.63.0"
-params.imgt_commit  = "8382fbe"
-params.build_references = false
-params.kourami_commit = "545c770"
-params.references_basedir = "references"
-params.reference_dir = "${params.references_basedir}/bwakit/hs38DH*"
-params.hla_la_graph = "${params.references_basedir}/hla-la"
-params.kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
-params.kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
-params.trim = true
-params.ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna*"
-params.novoalign = "${projectDir}/bin/novoalign"
-params.novolicense = null
+params {
+        cram_fasta = null
+        aligned = null
+        weights = "${projectDir}/assets/benchmarking_results_claeys_cleaned.csv"
+        trimmer = "fastp"
+        adapter_fasta = ""
+        voting_method = "majority"
+        save_trimmed_fail = false
+        save_merged = false
+imgt_version = "3.63.0"
+imgt_commit  = "8382fbe"
+build_references = false
+kourami_commit = "545c770"
+references_basedir = "references"
+reference_dir = "${params.references_basedir}/bwakit/hs38DH*"
+hla_la_graph = "${params.references_basedir}/hla-la"
+kourami_database = "${params.references_basedir}/kourami/custom_db/3.63.0/"
+kourami_ref = "${params.references_basedir}/kourami/resources/hs38NoAltDH.fa*"
+trim = true
+ref_polysolver = "${params.references_basedir}/polysolver/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna*"
+novoalign = "${projectDir}/bin/novoalign"
+novolicense = null
+hla_la_prg_tar = null
+hs38noaltdh_fa_md5 = "ba0254bd40d04e25891b0f11b0da5d0c"
+hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
+polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
+hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
+}
 
-params.hla_la_prg_tar = null
-params.hs38noaltdh_fa_md5 = "ba0254bd40d04e25891b0f11b0da5d0c"
-params.hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
-params.polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
-params.hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
+
 
 workflow {
 
@@ -93,6 +104,7 @@ workflow {
                   params.kourami_commit,
                   params.hs38noaltdh_fa_md5,
                   params.hs38dh_fa_md5,
+                  params.hla_la_prg_tar,
                   params.hla_la_tar_md5,
                   params.polysolver_fna_md5
               )
@@ -110,6 +122,7 @@ workflow {
         println "params.aligned specified..."
         // --- ALIGNMENT BRANCH (BAM/CRAM) ---
         //channel.of(file(params.samplesheet), checkIfExists: true)
+        /*
         channel.fromPath(params.samplesheet, checkIfExists: true)
         | splitCsv(header: true)
         | map { row ->
@@ -123,6 +136,20 @@ workflow {
             return [ meta, alignment_file ]
         }
         | set { ch_alignment }
+   */
+ch_alignment = channel
+    .fromPath(params.samplesheet, checkIfExists: true)
+    .splitCsv(header: true)
+    .map { row ->
+        def meta = row.subMap(['sample'])
+        def alignment_file = file(row.aln, checkIfExists: true)
+
+        if (alignment_file.extension == 'cram' && !params.cram_fasta) {
+            error "ERROR: CRAM file detected [${alignment_file.name}], but no reference FASTA provided via --fasta"
+        }
+
+        return [meta, alignment_file]
+    }
         SAMTOOLS_SORT_INDEX_BEFORE_INDEX(
                             ch_alignment,
                             ch_fasta_cram
@@ -147,6 +174,7 @@ workflow {
     } else {
     println "fastq input..."
     //channel.of(file(params.samplesheet), checkIfExists: true)
+    /*
     channel.fromPath(params.samplesheet, checkIfExists: true)
     | splitCsv( header:true, strip:true )
     | flatMap { row ->
@@ -167,6 +195,27 @@ workflow {
     return [ [ meta, reads ] ]
     }
     | set { ch_fastq }
+*/
+ch_fastq = channel
+    .fromPath(params.samplesheet, checkIfExists: true)
+    .splitCsv(header: true, strip: true)
+    .flatMap { row ->
+        if (!row.sample || !row.fastq_1) {
+            return []
+        }
+
+        def fastq_1 = file(row.fastq_1, checkIfExists: true)
+        def reads = [fastq_1]
+
+        if (row.fastq_2) {
+            reads << file(row.fastq_2, checkIfExists: true)
+        }
+
+        def meta = row.subMap('sample')
+        meta.single_end = (reads.size() == 1)
+
+        return [[meta, reads]]
+    }
     trim = params.trim
 
     // issue message if single-end data is provided
