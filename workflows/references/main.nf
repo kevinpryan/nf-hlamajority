@@ -377,6 +377,7 @@ workflow REFERENCES {
     kourami_commit
     hs38noaltdh_fa_md5
     hs38dh_fa_md5
+    hla_la_prg_tar
     hla_la_tar_md5
     polysolver_fna_md5
 
@@ -415,14 +416,14 @@ workflow REFERENCES {
 
     Channel
     .from(
-        params.hla_la_prg_tar 
-            ? file(params.hla_la_prg_tar)
+        hla_la_prg_tar 
+            ? file(hla_la_prg_tar)
             : null
     )
     .set { ch_hla_la_tar }
 
-    if (params.hla_la_prg_tar) {
-        hla_la_zip = file(params.hla_la_prg_tar) 
+    if (hla_la_prg_tar) {
+        hla_la_zip = file(hla_la_prg_tar) 
     } else {
         log.info "No --hla_la_prg_tar provided; performing automated download"
         HLA_LA_REFERENCE_DOWNLOAD(hla_la_tar_md5)
