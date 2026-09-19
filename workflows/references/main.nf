@@ -222,7 +222,7 @@ process BUILD_BWAKIT {
 
     gzip -dc GCA_000001405.15_GRCh38_full_analysis_set.fna.gz > hs38DH.fa
 
-    cat "\$root/resource-GRCh38/hs38DH-extra.fa" >> hs38DH.fa
+    cat "/usr/local/bin/resource-GRCh38/hs38DH-extra.fa" >> hs38DH.fa
 
     actual_md5=\$(md5sum hs38DH.fa | awk '{print \$1}')
     if [ "\$actual_md5" != "${expected_md5}" ]; then
