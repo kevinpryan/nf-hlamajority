@@ -35,7 +35,7 @@ workflow HLATYPING {
     db_kourami = file(kourami_database, checkIfExists: true)
     weights = file(weights, checkIfExists: true)
     mosdepth_bed = file("$projectDir/assets/hla-a-b-c-exons-2-3.bed", checkIfExists: true)
-    method = params.voting_method
+    method = voting_method
     ref_polysolver = files(reference_polysolver, checkIfExists: true)
     if (trim == true) {
         FASTP (
