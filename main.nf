@@ -6,10 +6,14 @@ include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_BEFORE_INDEX } from "./modu
 include { SAMTOOLS_SORT_INDEX as SAMTOOLS_SORT_INDEX_AFTER_INDEX } from "./modules/local/samtools_sort_index"
 include { BAM_TO_FASTQ } from "./modules/local/bam_to_fastq"
 include { SUBSET_ALIGNMENT } from "./modules/local/subset_alignment"
+include { validateParameters; paramsSummaryLog } from 'plugin/nf-schema'
 
+
+/*
 params {
         cram_fasta = null
-        aligned = null
+        //aligned = null
+        aligned = false
         weights = "${projectDir}/assets/benchmarking_results_claeys_cleaned.csv"
         trimmer = "fastp"
         adapter_fasta = ""
@@ -35,10 +39,15 @@ hs38dh_fa_md5      = "efe32feec5e0909725822717a3319c87"
 polysolver_fna_md5 = "a6da8681616c05eb542f1d91606a7b2f"
 hla_la_tar_md5 = "525a8aa0c7f357bf29fe2c75ef1d477d"
 }
-
+*/
 
 
 workflow {
+    // Validate input parameters
+    validateParameters()
+
+    // Print summary of supplied parameters
+    log.info paramsSummaryLog(workflow)
 
     // Enforcement of novoalign placement
     def expected_novoalign = file("${projectDir}/bin/novoalign").toString()
