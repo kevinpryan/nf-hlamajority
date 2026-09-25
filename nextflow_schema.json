@@ -172,6 +172,9 @@
         },
         "skip_polysolver": {
             "type": "string"
-        }
+        },
+	"samplesheet": {
+            "type": "string"
+        },
     }
 }
