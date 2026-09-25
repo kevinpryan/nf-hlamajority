@@ -45,6 +45,7 @@ process GET_KOURAMI {
     """
 }
 
+/*
 process KOURAMI_DOWNLOAD_HS38NOALTDH {
     publishDir "${params.references_basedir}/kourami/resources",
                mode: 'copy',
@@ -72,6 +73,92 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
     echo "MD5 OK: hs38NoAltDH.fa (\$actual_md5)"
     """
 }
+*/
+
+/*
+process KOURAMI_DOWNLOAD_HS38NOALTDH {
+    publishDir "${params.references_basedir}/kourami/resources",
+               mode: 'copy',
+               saveAs: { file -> new File(file).getName() }
+
+    label 'HLALA_CONTAINER'
+
+    input:
+    path kourami_repo
+    val expected_md5
+
+    output:
+    path("${kourami_repo}/resources/hs38NoAltDH.fa"), emit: reference
+
+    script:
+    """
+    set -euo pipefail
+    url38NoAltDecoy="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz"
+
+    #cd ${kourami_repo}/scripts
+    cd ${kourami_repo}/resources
+    wget \\
+        --continue \\
+        --tries=5 \\
+        --waitretry=30 \\
+        --read-timeout=60 \\
+        --timeout=60 \\
+        --retry-connrefused \\
+        -O hs38NoAltDecoy.fa.gz \\
+        \$url38NoAltDecoy
+
+    gzip -dc hs38NoAltDecoy.fa.gz > hs38NoAltDH.fa
+    gzip -dc hla_bwa.kit.fna.gz >> hs38NoAltDH.fa
+
+    actual_md5=\$(md5sum ../resources/hs38NoAltDH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38NoAltDH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+
+    echo "MD5 OK: hs38NoAltDH.fa (\$actual_md5)"
+    """
+}
+*/
+
+process KOURAMI_DOWNLOAD_HS38NOALTDH {
+    publishDir "${params.references_basedir}/kourami/resources",
+               mode: 'copy',
+               saveAs: { file -> new File(file).getName() }
+
+    label 'HLALA_CONTAINER'
+
+    input:
+    path kourami_repo
+    val expected_md5
+
+    output:
+    path("${kourami_repo}/resources/hs38NoAltDH.fa"), emit: reference
+
+    script:
+    """
+    url38NoAltDecoy="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz"
+
+    #cd ${kourami_repo}/scripts
+    cd ${kourami_repo}/resources
+
+    resumable_download.sh \\
+        \$url38NoAltDecoy \\
+        hs38NoAltDecoy.fa.gz
+
+    gzip -dc hs38NoAltDecoy.fa.gz > hs38NoAltDH.fa
+    gzip -dc hla_bwa.kit.fna.gz >> hs38NoAltDH.fa
+
+    actual_md5=\$(md5sum ../resources/hs38NoAltDH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38NoAltDH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+
+    echo "MD5 OK: hs38NoAltDH.fa (\$actual_md5)"
+    """
+}
+
 
 process BUILD_KOURAMI {
     publishDir "${params.references_basedir}", mode: 'copy'
@@ -108,6 +195,7 @@ process BUILD_KOURAMI {
     """
 }
 
+/*
 process BUILD_BWAKIT {
     label 'bwa_mem_container'
     publishDir "${params.references_basedir}/bwakit", mode: 'copy' 
@@ -131,8 +219,101 @@ process BUILD_BWAKIT {
     echo "MD5 OK: hs38DH.fa (\$actual_md5)"
     """
 }
+*/
+
+/*
+process BUILD_BWAKIT {
+    label 'bwa_mem_container'
+    publishDir "${params.references_basedir}/bwakit", mode: 'copy'
+
+    input:
+    val expected_md5
+
+    output:
+    path ("hs38DH.fa"), emit: reference
+    path ("hs38DH.fa.alt")
+
+    script:
+    """
+    url38="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz"
+
+    for attempt in 1 2 3 4 5; do
+        if wget -c -T 60 -O GCA_000001405.15_GRCh38_full_analysis_set.fna.gz "\$url38"; then
+            break
+        fi
+
+        if [ "\$attempt" -eq 5 ]; then
+            echo "ERROR: download failed after 5 attempts" >&2
+            exit 1
+        fi
+
+        echo "Download failed; retrying in 30 seconds..." >&2
+        sleep 30
+    done
+
+    #wget \\
+    #--continue \\
+    #--tries=5 \\
+    #--waitretry=30 \\
+    #--read-timeout=60 \\
+    #--timeout=60 \\
+    #--retry-connrefused \\
+    #-O GCA_000001405.15_GRCh38_full_analysis_set.fna.gz \\
+    #"\$url38"
+
+    gzip -dc GCA_000001405.15_GRCh38_full_analysis_set.fna.gz > hs38DH.fa
+
+    cat "/usr/local/bin/resource-GRCh38/hs38DH-extra.fa" >> hs38DH.fa
+
+    cp /usr/local/bin/resource-GRCh38/hs38DH.fa.alt hs38DH.fa.alt
+
+    actual_md5=\$(md5sum hs38DH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38DH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: hs38DH.fa (\$actual_md5)"
+    """
+}
+*/
+
+process BUILD_BWAKIT {
+    label 'bwa_mem_container'
+    publishDir "${params.references_basedir}/bwakit", mode: 'copy'
+
+    input:
+    val expected_md5
+
+    output:
+    path ("hs38DH.fa"), emit: reference
+    path ("hs38DH.fa.alt")
+
+    script:
+    """
+    url38="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz"
+    
+    resumable_download_bwakit.sh \\
+        \$url38 \\
+        GCA_000001405.15_GRCh38_full_analysis_set.fna.gz
+
+    gzip -dc GCA_000001405.15_GRCh38_full_analysis_set.fna.gz > hs38DH.fa
+
+    cat "/usr/local/bin/resource-GRCh38/hs38DH-extra.fa" >> hs38DH.fa
+
+    cp /usr/local/bin/resource-GRCh38/hs38DH.fa.alt hs38DH.fa.alt
+
+    actual_md5=\$(md5sum hs38DH.fa | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: hs38DH.fa md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: hs38DH.fa (\$actual_md5)"
+    """
+}
 
 
+
+/*
 process HLA_LA_REFERENCE_DOWNLOAD {
     label 'HLALA_CONTAINER'
 
@@ -145,6 +326,39 @@ process HLA_LA_REFERENCE_DOWNLOAD {
     script:
     """
     wget -O PRG_MHC_GRCh38_withIMGT.tar.gz https://zenodo.org/records/19336310/files/PRG_MHC_GRCh38_withIMGT.tar.gz?download=1 
+
+    actual_md5=\$(md5sum PRG_MHC_GRCh38_withIMGT.tar.gz | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: PRG_MHC_GRCh38_withIMGT.tar.gz md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: PRG_MHC_GRCh38_withIMGT.tar.gz (\$actual_md5)"
+    """
+}
+*/
+
+process HLA_LA_REFERENCE_DOWNLOAD {
+    label 'HLALA_CONTAINER'
+
+    input:
+    val expected_md5
+
+    output:
+    path("PRG_MHC_GRCh38_withIMGT.tar.gz"), emit: reference_zip
+
+    script:
+    """
+    set -euo pipefail
+
+    wget \\
+        --continue \\
+        --tries=5 \\
+        --waitretry=30 \\
+        --read-timeout=60 \\
+        --timeout=60 \\
+        --retry-connrefused \\
+        -O PRG_MHC_GRCh38_withIMGT.tar.gz \\
+        https://zenodo.org/records/19336310/files/PRG_MHC_GRCh38_withIMGT.tar.gz?download=1
 
     actual_md5=\$(md5sum PRG_MHC_GRCh38_withIMGT.tar.gz | awk '{print \$1}')
     if [ "\$actual_md5" != "${expected_md5}" ]; then
@@ -172,6 +386,7 @@ process HLA_LA_REFERENCE_PREPARE {
     """
 }
 
+/*
 process POLYSOLVER_REFERENCE_DOWNLOAD {
     label 'HLALA_CONTAINER'
     publishDir "${params.references_basedir}/polysolver", mode: 'copy'
@@ -196,6 +411,75 @@ process POLYSOLVER_REFERENCE_DOWNLOAD {
     """
 }
 
+
+process POLYSOLVER_REFERENCE_DOWNLOAD {
+    label 'HLALA_CONTAINER'
+    publishDir "${params.references_basedir}/polysolver", mode: 'copy'
+
+    input:
+    val expected_md5
+
+    output:
+    path("GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"), emit: reference
+
+    script:
+    """
+    set -euo pipefail
+
+    wget \\
+        --continue \\
+        --tries=5 \\
+        --waitretry=30 \\
+        --read-timeout=60 \\
+        --timeout=60 \\
+        --retry-connrefused \\
+        -O GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz \\
+        ftp://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+
+    gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+
+    actual_md5=\$(md5sum GCA_000001405.15_GRCh38_no_alt_analysis_set.fna | awk '{print \$1}')
+
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: polysolver reference md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+
+    echo "MD5 OK: polysolver reference (\$actual_md5)" 
+    """
+}
+*/
+
+process POLYSOLVER_REFERENCE_DOWNLOAD {
+    label 'HLALA_CONTAINER'
+    publishDir "${params.references_basedir}/polysolver", mode: 'copy'
+
+    input:
+    val expected_md5
+
+    output:
+    path("GCA_000001405.15_GRCh38_no_alt_analysis_set.fna"), emit: reference
+
+    script:
+    """
+    resumable_download.sh \\
+        "https://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz" \\
+        GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+
+    gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
+
+    actual_md5=\$(md5sum GCA_000001405.15_GRCh38_no_alt_analysis_set.fna | awk '{print \$1}')
+    if [ "\$actual_md5" != "${expected_md5}" ]; then
+        echo "ERROR: polysolver reference md5 mismatch (expected ${expected_md5}, got \$actual_md5)" >&2
+        exit 1
+    fi
+    echo "MD5 OK: polysolver reference (\$actual_md5)"
+    """
+}
+
+
+
+
 workflow REFERENCES {
     take:
     reference_dir
@@ -204,6 +488,7 @@ workflow REFERENCES {
     kourami_commit
     hs38noaltdh_fa_md5
     hs38dh_fa_md5
+    hla_la_prg_tar
     hla_la_tar_md5
     polysolver_fna_md5
 
@@ -239,16 +524,17 @@ workflow REFERENCES {
                      BUILD_BWAKIT.out.reference,
                      "bwakit"
                     )
+
     Channel
     .from(
-        params.hla_la_prg_tar 
-            ? file(params.hla_la_prg_tar)
+        hla_la_prg_tar 
+            ? file(hla_la_prg_tar)
             : null
     )
     .set { ch_hla_la_tar }
 
-    if (params.hla_la_prg_tar) {
-        hla_la_zip = file(params.hla_la_prg_tar) 
+    if (hla_la_prg_tar) {
+        hla_la_zip = file(hla_la_prg_tar) 
     } else {
         log.info "No --hla_la_prg_tar provided; performing automated download"
         HLA_LA_REFERENCE_DOWNLOAD(hla_la_tar_md5)
@@ -268,5 +554,4 @@ workflow REFERENCES {
                         POLYSOLVER_REFERENCE_DOWNLOAD.out.reference,
                         "polysolver"
                         )
-
 }

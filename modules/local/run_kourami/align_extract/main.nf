@@ -1,7 +1,8 @@
 process RUN_KOURAMI_ALIGN_EXTRACT{
     tag "$meta.sample"
-
-    publishDir "${params.outdir}/kourami/${meta.sample}"
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     tuple val(meta), path(bam), path(index)
@@ -22,7 +23,9 @@ process RUN_KOURAMI_ALIGN_EXTRACT{
 
 process RUN_KOURAMI_PLACEHOLDER_SE {
     tag "$meta.sample"
-    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     val meta

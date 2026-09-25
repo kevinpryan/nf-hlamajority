@@ -5,19 +5,19 @@ include { RUN_HLALA_PLACEHOLDER_FAILURE } from '../../../modules/local/run_hlala
 workflow HLA_LA {
 
     take:
-    bam
+    bam_ch
     graphdir
 
     main:
 
     RUN_HLALA(
-        bam,
+        bam_ch,
         graphdir
     )
 
 
     // Expected samples: keep only key
-    bam
+    bam_ch
         .map { meta, bam, index ->
             [meta.sample, meta]
         }

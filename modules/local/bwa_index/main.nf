@@ -1,6 +1,7 @@
 process BWA_INDEX {
     label 'bwa_mem_container'
-    publishDir "${params.references_basedir}/${subdir}", mode: 'copy'
+    publishDir "${params.references_basedir}", mode: 'copy',
+        saveAs: { file -> "${subdir}/${file}" }
 
     input:
     path reference
