@@ -75,7 +75,7 @@ nextflow run main.nf \
 ## Dependencies
 
 The pipeline requires:
-- Nextflow (DSL2)
+- Nextflow (DSL2). The pipeline has been tested on Nextflow versions `25.10.2` and `26.04.6`.
 - Singularity/Apptainer or Docker
 - Java (compatible with your Nextflow version)
 - Novoalign (recommended; required for the Polysolver subworkflow)
@@ -134,6 +134,13 @@ references
 │   ├── scripts
 │   ├── src
 │   └── target
+├── polysolver
+│   ├── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna
+│   ├── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.amb
+│   ├── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.ann
+│   ├── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.bwt
+│   ├── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.pac
+│   └── GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.sa
 └── source
     └── IMGTHLA
 ```
@@ -177,9 +184,9 @@ The test sample is 1000 Genomes NA12878. The CRAM file (316 MB) is provided thro
 
 The expected outputs of each tool from the test dataset can be found at:
 
-- `assets/test-outputs/test-outputs-1000genomes/NA12878/` (profile `test`)
-- `assets/test-outputs/test-outputs-1000genomes/NA12878_paired/` (profile `test_paired`)
-- `assets/test-outputs/test-outputs-1000genomes/NA12878_single_end/` (profile `test_single_end`)
+- `assets/test-profiles/test/` (profile `test`)
+- `assets/test-profiles/test_paired/` (profile `test_paired`)
+- `assets/test-profiles/test_single_end/` (profile `test_single_end`)
 
 #### Running on full datasets
        
@@ -295,7 +302,7 @@ Regardless of the voting method, the pipeline produces the following cross-sampl
 ├── nf_hlamajority_all_calls_sorted.tsv (HLA calls for each tool for each sample)
 ├── nf_hlamajority_depth_sorted.tsv (Mosdepth coverage)
 ├── nf_hlamajority_stats_combined_sorted.tsv (detailed information about voting, confidence scores, and assigned genotypes)
-└──nf_hlamajority_status_sorted.tsv (per-sample summary of status of each tool: SUCCESS, TOOL_FAILURE, SKIP_SINGLE_END)
+└── nf_hlamajority_status_sorted.tsv (per-sample summary of status of each tool: SUCCESS, TOOL_FAILURE, SKIP_SINGLE_END)
 ```
 
 Example outputs can be found [here](https://github.com/kevinpryan/nf-hlamajority/tree/dev-kevin/assets/test-profiles/test_paired/combined_results).
