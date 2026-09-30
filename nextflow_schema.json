@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://raw.githubusercontent.com//master/nextflow_schema.json",
-    "title": " pipeline parameters",
-    "description": "",
+    "$id": "https://raw.githubusercontent.com/kevinpryan/nf-hlamajority/main/nextflow_schema.json",
+    "title": "kevinpryan/nf-hlamajority pipeline parameters",
+    "description": "nf-hlamajority is a Nextflow pipeline for HLA class I genotyping from DNA sequencing data, including whole-exome sequencing (WES) and whole-genome sequencing (WGS). It implements the consensus voting strategy described by Claeys et al. (2023), combining four HLA class I genotyping tools into a single reproducible workflow. The pipeline also provides sequencing depth summaries and optional weighted voting.",
     "type": "object",
     "$defs": {
         "input_output_options": {
@@ -171,10 +171,11 @@
             "type": "string"
         },
         "skip_polysolver": {
-            "type": "string"
+            "type": "boolean",
+	    "default": false
         },
 	"samplesheet": {
             "type": "string"
-        },
+        }
     }
 }
