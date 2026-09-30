@@ -9,6 +9,7 @@ process BWA_INDEX {
 
     output:
     path("*.{amb,ann,bwt,pac,sa}")
+    path(reference)
 
     script:
     """
