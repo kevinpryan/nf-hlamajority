@@ -1,7 +1,9 @@
 process RUN_KOURAMI_JAR{
     tag "$meta.sample"
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
-    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
     input:
     tuple val(meta), path(bam_bai)
     path kourami_panel
@@ -21,7 +23,9 @@ process RUN_KOURAMI_JAR{
 
 process RUN_KOURAMI_PLACEHOLDER {
     tag "$meta.sample"
-    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     val meta
