@@ -37,6 +37,7 @@ process RUN_POLYSOLVER {
 
 process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
     tag "$meta.sample"
+    label 'container_basic'
 
     //publishDir "${params.outdir}/polysolver_calls/${meta.sample}", mode: 'copy'
     publishDir "${params.outdir}/polysolver_calls",
@@ -64,6 +65,7 @@ process RUN_POLYSOLVER_PLACEHOLDER_SINGLE_END {
 
 process RUN_POLYSOLVER_PLACEHOLDER_MISSING_NOVOALIGN {
     tag "$meta.sample"
+    label 'container_basic'
     publishDir "${params.outdir}/polysolver_calls",
         mode: 'copy',
         saveAs: { file -> "${meta.sample}/${file}" }

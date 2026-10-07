@@ -23,6 +23,7 @@ process RUN_KOURAMI_JAR{
 
 process RUN_KOURAMI_PLACEHOLDER {
     tag "$meta.sample"
+    label 'container_basic'
     publishDir "${params.outdir}/kourami",
         mode: 'copy',
         saveAs: { file -> "${meta.sample}/${file}" }

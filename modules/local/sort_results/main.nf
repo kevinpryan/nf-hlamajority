@@ -1,5 +1,5 @@
 process SORT_RESULTS{
-
+    label 'container_basic'
     publishDir "$params.outdir/combined_results", mode: 'copy'
     input:
     each path(outfile)
@@ -11,18 +11,3 @@ process SORT_RESULTS{
     awk 'NR==1{print; next} {print | "sort"}' $outfile >  ${outfile.baseName}_sorted.tsv
     """
 }
-
-process SORT_RESULTS_CSV{
-
-    publishDir "$params.outdir/combined_results", mode: 'copy'
-    input:
-    each path(outfile)
-    output:
-    path("*sorted.csv")
-
-    script:
-    """
-    awk -F ',' 'NR==1{print; next} {print | "sort"}' $outfile >  ${outfile.baseName}_sorted.csv
-    """
-}
-

@@ -1,6 +1,5 @@
 process RUN_HLALA {
     tag "$meta.sample"
-
     publishDir "${params.outdir}/hlala_calls",
         mode: 'copy',
         saveAs: { file -> "${meta.sample}/${file}" }
@@ -35,8 +34,7 @@ process RUN_HLALA {
 
 process RUN_HLALA_PLACEHOLDER_SINGLE_END {
     tag "$meta.sample"
-
-    //publishDir "${params.outdir}/hlala_calls/${meta.sample}", mode: 'copy'
+    label 'container_basic'
     publishDir "${params.outdir}/hlala_calls",
         mode: 'copy',
         saveAs: { file -> "${meta.sample}/${file}" }
@@ -64,7 +62,7 @@ process RUN_HLALA_PLACEHOLDER_SINGLE_END {
 
 process RUN_HLALA_PLACEHOLDER_FAILURE {
     tag "$meta.sample"
-
+    label 'container_basic'
     publishDir "${params.outdir}/hlala_calls",
         mode: 'copy',
         saveAs: { file -> "${meta.sample}/${file}" }
