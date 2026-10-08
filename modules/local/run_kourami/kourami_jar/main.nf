@@ -1,7 +1,9 @@
 process RUN_KOURAMI_JAR{
     tag "$meta.sample"
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
-    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
     input:
     tuple val(meta), path(bam_bai)
     path kourami_panel
@@ -11,9 +13,10 @@ process RUN_KOURAMI_JAR{
     tuple val(meta), path("${meta.sample}.kourami.STATUS.txt"), emit: run_status
 
     script:
+    def heap = task.memory ? "-Xmx${(task.memory.toMega() * 0.75) as long}m" : ''
     """
     mkdir -p kourami_calls
-    java -jar /opt/wtsi-cgp/java/Kourami.jar --outfilePrefix ${meta.sample} -d ${kourami_panel} *.bam
+    java ${heap} -jar /opt/wtsi-cgp/java/Kourami.jar --outfilePrefix ${meta.sample} -d ${kourami_panel} *.bam
     cp *.result kourami_calls
     echo "${meta.sample}\tKourami\tSUCCESS" > "${meta.sample}.kourami.STATUS.txt"
     """
@@ -21,7 +24,11 @@ process RUN_KOURAMI_JAR{
 
 process RUN_KOURAMI_PLACEHOLDER {
     tag "$meta.sample"
-    publishDir "${params.outdir}/kourami/${meta.sample}", mode: 'copy'
+    label 'container_basic'
+
+    publishDir "${params.outdir}/kourami",
+        mode: 'copy',
+        saveAs: { file -> "${meta.sample}/${file}" }
 
     input:
     val meta
