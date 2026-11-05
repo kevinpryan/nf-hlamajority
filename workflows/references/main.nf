@@ -61,8 +61,7 @@ process KOURAMI_DOWNLOAD_HS38NOALTDH {
 
     script:
     """
-    url38NoAltDecoy="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz"
-
+    url38NoAltDecoy="https://zenodo.org/records/23943954/files/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz?download=1"
     cd ${kourami_repo}/resources
 
     resumable_download.sh \\
@@ -130,8 +129,7 @@ process BUILD_BWAKIT {
 
     script:
     """
-    url38="ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz"
-    
+    url38="https://zenodo.org/records/23943954/files/GCA_000001405.15_GRCh38_full_analysis_set.fna.gz?download=1"
     resumable_download_bwakit.sh \\
         \$url38 \\
         GCA_000001405.15_GRCh38_full_analysis_set.fna.gz
@@ -211,7 +209,7 @@ process POLYSOLVER_REFERENCE_DOWNLOAD {
     script:
     """
     resumable_download.sh \\
-        "https://ftp.ncbi.nlm.nih.gov/genomes/archive/old_genbank/Eukaryotes/vertebrates_mammals/Homo_sapiens/GRCh38/seqs_for_alignment_pipelines/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz" \\
+        "https://zenodo.org/records/23943954/files/GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz?download=1" \\
         GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
 
     gunzip GCA_000001405.15_GRCh38_no_alt_analysis_set.fna.gz
