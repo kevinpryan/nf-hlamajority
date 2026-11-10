@@ -75,7 +75,7 @@ nextflow run main.nf \
 ## Dependencies
 
 The pipeline requires:
-- Nextflow (DSL2). The pipeline has been tested on Nextflow versions `25.10.2` and `26.04.6`.
+- Nextflow (DSL2). The pipeline has been tested on Nextflow versions `25.10.2` and `26.04.6`. Current work includes adding compatbility with Nextflow version `26.10.5`.
 - Singularity/Apptainer or Docker
 - Java (compatible with your Nextflow version)
 - Novoalign (recommended; required for the Polysolver subworkflow)
